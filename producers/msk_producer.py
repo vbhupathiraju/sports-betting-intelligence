@@ -49,6 +49,7 @@ def create_producer() -> KafkaProducer:
         request_timeout_ms=30000,
         connections_max_idle_ms=540000,
         client_id=f"sports-betting-producer-{socket.gethostname()}",
+	api_version=(3, 5, 1),
     )
 
     logger.info("KafkaProducer created successfully")
