@@ -1,14 +1,5 @@
 version: "3.8"
 
-# Sports Betting Intelligence — Local Producer Stack
-# Runs all three Kafka producers against AWS MSK using IAM auth via instance profile.
-#
-# Usage:
-#   docker-compose up --build
-#
-# AWS credentials are passed from your local environment (via ~/.aws or env vars).
-# In production (EC2), the instance profile handles auth automatically.
-
 services:
   odds-api-producer:
     build:
@@ -18,9 +9,9 @@ services:
     restart: unless-stopped
     environment:
       - AWS_DEFAULT_REGION=us-east-1
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+      - AWS_PROFILE=sports-betting
+    volumes:
+      - ~/.aws:/root/.aws:ro
     logging:
       driver: "json-file"
       options:
@@ -35,9 +26,9 @@ services:
     restart: unless-stopped
     environment:
       - AWS_DEFAULT_REGION=us-east-1
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+      - AWS_PROFILE=sports-betting
+    volumes:
+      - ~/.aws:/root/.aws:ro
     logging:
       driver: "json-file"
       options:
@@ -52,9 +43,9 @@ services:
     restart: unless-stopped
     environment:
       - AWS_DEFAULT_REGION=us-east-1
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+      - AWS_PROFILE=sports-betting
+    volumes:
+      - ~/.aws:/root/.aws:ro
     logging:
       driver: "json-file"
       options:

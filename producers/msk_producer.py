@@ -19,17 +19,17 @@ logger = logging.getLogger(__name__)
 AWS_REGION = "us-east-1"
 
 
-def _token_provider():
-    """Callback used by kafka-python for OAUTHBEARER token refresh."""
-    token, expiry_ms = MSKAuthTokenProvider.generate_auth_token(AWS_REGION)
-    return token, expiry_ms
+class MSKTokenProvider:
+    """
+    Token provider object required by kafka-python's OAUTHBEARER mechanism.
+    Must implement a token() method that returns a valid IAM auth token.
+    """
+    def token(self):
+        token, _ = MSKAuthTokenProvider.generate_auth_token(AWS_REGION)
+        return token
 
 
 def create_producer() -> KafkaProducer:
-    """
-    Create and return a KafkaProducer configured for AWS MSK with IAM auth.
-    Retries on transient connection errors.
-    """
     brokers = get_bootstrap_brokers()
     logger.info("Connecting to MSK brokers: %s", brokers)
 
@@ -37,18 +37,15 @@ def create_producer() -> KafkaProducer:
         bootstrap_servers=brokers.split(","),
         security_protocol="SASL_SSL",
         sasl_mechanism="OAUTHBEARER",
-        sasl_oauth_token_provider=_token_provider,
+        sasl_oauth_token_provider=MSKTokenProvider(),
         value_serializer=lambda v: json.dumps(v).encode("utf-8"),
         key_serializer=lambda k: k.encode("utf-8") if k else None,
-        # Reliability settings
         acks="all",
         retries=5,
         retry_backoff_ms=500,
-        # Throughput settings
         linger_ms=100,
         batch_size=16384,
         compression_type="gzip",
-        # Connection settings
         request_timeout_ms=30000,
         connections_max_idle_ms=540000,
         client_id=f"sports-betting-producer-{socket.gethostname()}",
@@ -64,10 +61,6 @@ def send_message(
     value: dict,
     key: str = None,
 ) -> None:
-    """
-    Send a single message to a Kafka topic.
-    Adds ingested_at timestamp to every message.
-    """
     value["ingested_at"] = datetime.now(timezone.utc).isoformat()
 
     future = producer.send(topic, value=value, key=key)
