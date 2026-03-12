@@ -13,6 +13,16 @@ resource "aws_security_group" "ec2_producer" {
     description = "Kafka TLS to MSK"
   }
 
+  # Allow outbound traffic to MSK on Kafka IAM auth port (SASL/OAUTHBEARER)
+  # NOTE: This rule was added manually via CLI in Phase 3 — now codified in Terraform
+  egress {
+    from_port   = 9098
+    to_port     = 9098
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+    description = "Kafka IAM auth (SASL/OAUTHBEARER) to MSK"
+  }
+
   # Allow outbound HTTPS for API calls (Odds API, Kalshi, Secrets Manager)
   egress {
     from_port   = 443

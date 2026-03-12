@@ -1,17 +1,12 @@
-version: "3.8"
-
 services:
+
   odds-api-producer:
     build:
-      context: producers/
+      context: ./producers
       dockerfile: odds_api_producer/Dockerfile
-    container_name: odds-api-producer
     restart: unless-stopped
     environment:
       - AWS_DEFAULT_REGION=us-east-1
-      - AWS_PROFILE=sports-betting
-    volumes:
-      - ~/.aws:/root/.aws:ro
     logging:
       driver: "json-file"
       options:
@@ -20,15 +15,11 @@ services:
 
   kalshi-producer:
     build:
-      context: producers/
+      context: ./producers
       dockerfile: kalshi_producer/Dockerfile
-    container_name: kalshi-producer
     restart: unless-stopped
     environment:
       - AWS_DEFAULT_REGION=us-east-1
-      - AWS_PROFILE=sports-betting
-    volumes:
-      - ~/.aws:/root/.aws:ro
     logging:
       driver: "json-file"
       options:
@@ -37,15 +28,24 @@ services:
 
   game-events-producer:
     build:
-      context: producers/
+      context: ./producers
       dockerfile: game_events_producer/Dockerfile
-    container_name: game-events-producer
     restart: unless-stopped
     environment:
       - AWS_DEFAULT_REGION=us-east-1
-      - AWS_PROFILE=sports-betting
-    volumes:
-      - ~/.aws:/root/.aws:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  firehose-consumer:
+    build:
+      context: ./producers
+      dockerfile: firehose_consumer/Dockerfile
+    restart: unless-stopped
+    environment:
+      - AWS_DEFAULT_REGION=us-east-1
     logging:
       driver: "json-file"
       options:
