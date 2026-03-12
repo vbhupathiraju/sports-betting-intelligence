@@ -29,3 +29,12 @@ secrets.json
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Terraform
+*.tfvars
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+crash.log
+outputs_values.txt
