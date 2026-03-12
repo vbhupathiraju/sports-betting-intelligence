@@ -1,21 +1,47 @@
+"""
+Secrets Manager helper for sports-betting-intelligence project.
+Centralizes all secret retrieval with caching to minimize API calls.
+"""
+
 import boto3
 import json
+import logging
+from functools import lru_cache
 
-def get_secret(secret_name: str, region: str = "us-east-1") -> dict:
-    """
-    Fetch a secret from AWS Secrets Manager.
-    
-    Usage:
-        from secrets_helper import get_secret
-        creds = get_secret("sports-betting/kalshi-credentials")
-        api_key = creds["api_key"]
-    """
-    client = boto3.client("secretsmanager", region_name=region)
-    response = client.get_secret_value(SecretId=secret_name)
+logger = logging.getLogger(__name__)
+
+# Region where secrets are stored
+AWS_REGION = "us-east-1"
+
+
+def _get_client():
+    return boto3.client("secretsmanager", region_name=AWS_REGION)
+
+
+@lru_cache(maxsize=None)
+def _get_secret_raw(secret_id: str) -> dict:
+    """Fetch and parse a secret from Secrets Manager (cached)."""
+    client = _get_client()
+    response = client.get_secret_value(SecretId=secret_id)
     return json.loads(response["SecretString"])
 
 
-if __name__ == "__main__":
-    # Quick test — run with: python secrets_helper.py
-    secret = get_secret("sports-betting/odds-api-key")
-    print(f"✅ Secrets Manager connection working. Key starts with: {secret['api_key'][:6]}...")
+def get_odds_api_key() -> str:
+    secret = _get_secret_raw("sports-betting/odds-api-key")
+    return secret["api_key"]
+
+
+def get_kalshi_credentials() -> dict:
+    """Returns dict with 'email' and 'api_key' keys."""
+    return _get_secret_raw("sports-betting/kalshi-credentials")
+
+
+def get_snowflake_credentials() -> dict:
+    """Returns dict with account, username, password, database, warehouse."""
+    return _get_secret_raw("sports-betting/snowflake-credentials")
+
+
+def get_bootstrap_brokers() -> str:
+    """Returns the MSK bootstrap broker string for IAM auth (TLS endpoints)."""
+    secret = _get_secret_raw("sports-betting/msk-bootstrap-brokers")
+    return secret["bootstrap_brokers"]

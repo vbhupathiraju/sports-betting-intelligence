@@ -1,0 +1,62 @@
+version: "3.8"
+
+# Sports Betting Intelligence — Local Producer Stack
+# Runs all three Kafka producers against AWS MSK using IAM auth via instance profile.
+#
+# Usage:
+#   docker-compose up --build
+#
+# AWS credentials are passed from your local environment (via ~/.aws or env vars).
+# In production (EC2), the instance profile handles auth automatically.
+
+services:
+  odds-api-producer:
+    build:
+      context: producers/
+      dockerfile: odds_api_producer/Dockerfile
+    container_name: odds-api-producer
+    restart: unless-stopped
+    environment:
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  kalshi-producer:
+    build:
+      context: producers/
+      dockerfile: kalshi_producer/Dockerfile
+    container_name: kalshi-producer
+    restart: unless-stopped
+    environment:
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  game-events-producer:
+    build:
+      context: producers/
+      dockerfile: game_events_producer/Dockerfile
+    container_name: game-events-producer
+    restart: unless-stopped
+    environment:
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
