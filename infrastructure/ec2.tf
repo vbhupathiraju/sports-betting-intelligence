@@ -31,15 +31,20 @@ resource "aws_iam_role_policy" "ec2_producer" {
         Effect = "Allow"
         Action = [
           "kafka-cluster:Connect",
+          "kafka-cluster:AlterCluster",
           "kafka-cluster:DescribeCluster",
-          "kafka-cluster:WriteData",
+          "kafka-cluster:DescribeClusterDynamicConfiguration",
           "kafka-cluster:DescribeTopic",
-          "kafka-cluster:CreateTopic"
+          "kafka-cluster:CreateTopic",
+          "kafka-cluster:WriteData",
+          "kafka-cluster:ReadData",
+          "kafka-cluster:AlterGroup",
+          "kafka-cluster:DescribeGroup",
+          "kafka:GetBootstrapBrokers",
+          "kafka:DescribeCluster",
+          "kafka:ListClusters"
         ]
-        Resource = [
-          "arn:aws:kafka:${var.aws_region}:${var.account_id}:cluster/${var.project_name}-msk-cluster/*",
-          "arn:aws:kafka:${var.aws_region}:${var.account_id}:topic/${var.project_name}-msk-cluster/*"
-        ]
+        Resource = "*"
       },
       {
         Sid    = "SecretsManagerAccess"
@@ -51,14 +56,28 @@ resource "aws_iam_role_policy" "ec2_producer" {
         Resource = "arn:aws:secretsmanager:${var.aws_region}:${var.account_id}:secret:sports-betting/*"
       },
       {
-        Sid    = "CloudWatchLogs"
+        Sid    = "CloudWatchAccess"
         Effect = "Allow"
         Action = [
+          "cloudwatch:PutMetricData",
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
-        Resource = "arn:aws:logs:${var.aws_region}:${var.account_id}:log-group:/sports-betting/*"
+        Resource = "*"
+      },
+      {
+        Sid    = "FirehoseAccess"
+        Effect = "Allow"
+        Action = [
+          "firehose:PutRecord",
+          "firehose:PutRecordBatch"
+        ]
+        Resource = [
+          "arn:aws:firehose:${var.aws_region}:${var.account_id}:deliverystream/sports-betting-odds-stream",
+          "arn:aws:firehose:${var.aws_region}:${var.account_id}:deliverystream/sports-betting-kalshi-stream",
+          "arn:aws:firehose:${var.aws_region}:${var.account_id}:deliverystream/sports-betting-game-events-stream"
+        ]
       }
     ]
   })
