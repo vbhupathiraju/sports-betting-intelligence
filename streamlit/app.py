@@ -249,13 +249,35 @@ def render_odds_charts(home_team, away_team, key_prefix=""):
     history["computed_at"] = pd.to_datetime(history["computed_at"], utc=True)
     combos = list(history.groupby(["team", "bookmaker_key"]))
 
+    # Time range buttons for Plotly
+    rangeselector = dict(
+        buttons=[
+            dict(label="Game Start", step="all"),
+            dict(count=6,  label="6h",  step="hour", stepmode="backward"),
+            dict(count=24, label="24h", step="hour", stepmode="backward"),
+        ],
+        bgcolor="#21262d",
+        activecolor="#58a6ff",
+        bordercolor="#30363d",
+        font=dict(color="#e6edf3", size=11),
+        x=0,
+        y=1.08,
+    )
+
+    chart_config = {"displayModeBar": False}
+
     # American odds chart
     fig_odds = go.Figure()
-    fig_odds.update_layout(**dark_layout(
-        title="American Odds Movement",
-        height=400,
-        y_title="American Odds",
-    ))
+    layout_odds = dark_layout(title="American Odds Movement", height=400, y_title="American Odds")
+    layout_odds["xaxis"]["rangeselector"] = rangeselector
+    layout_odds["xaxis"]["rangeslider"] = dict(visible=False)
+    layout_odds["legend"] = dict(
+        bgcolor="#161b22", bordercolor="#30363d", borderwidth=1,
+        font=dict(color="#e6edf3"),
+        itemclick="toggle", itemdoubleclick="toggleothers",
+        title=dict(text="Click to toggle · Double-click to isolate", font=dict(color="#8b949e", size=10)),
+    )
+    fig_odds.update_layout(**layout_odds)
     for i, ((team, book), grp) in enumerate(combos):
         grp = grp.sort_values("computed_at")
         color = TEAM_COLORS[i % len(TEAM_COLORS)]
@@ -268,16 +290,20 @@ def render_odds_charts(home_team, away_team, key_prefix=""):
             marker=dict(size=6, color=color),
             hovertemplate=f"<b>{team} ({book})</b><br>Odds: %{{y}}<br>Time: %{{x}}<extra></extra>",
         ))
-    st.plotly_chart(fig_odds, width="stretch", key=f"{key_prefix}_odds")
+    st.plotly_chart(fig_odds, width="stretch", key=f"{key_prefix}_odds", config=chart_config)
 
     # Implied probability chart
     fig_prob = go.Figure()
-    fig_prob.update_layout(**dark_layout(
-        title="Implied Probability Movement",
-        height=400,
-        y_title="Implied Probability",
-        y_tickformat=".0%",
-    ))
+    layout_prob = dark_layout(title="Implied Probability Movement", height=400, y_title="Implied Probability", y_tickformat=".0%")
+    layout_prob["xaxis"]["rangeselector"] = rangeselector
+    layout_prob["xaxis"]["rangeslider"] = dict(visible=False)
+    layout_prob["legend"] = dict(
+        bgcolor="#161b22", bordercolor="#30363d", borderwidth=1,
+        font=dict(color="#e6edf3"),
+        itemclick="toggle", itemdoubleclick="toggleothers",
+        title=dict(text="Click to toggle · Double-click to isolate", font=dict(color="#8b949e", size=10)),
+    )
+    fig_prob.update_layout(**layout_prob)
     for i, ((team, book), grp) in enumerate(combos):
         grp = grp.sort_values("computed_at")
         color = TEAM_COLORS[i % len(TEAM_COLORS)]
@@ -290,7 +316,7 @@ def render_odds_charts(home_team, away_team, key_prefix=""):
             marker=dict(size=6, color=color),
             hovertemplate=f"<b>{team} ({book})</b><br>Prob: %{{y:.1%}}<br>Time: %{{x}}<extra></extra>",
         ))
-    st.plotly_chart(fig_prob, width="stretch", key=f"{key_prefix}_prob")
+    st.plotly_chart(fig_prob, width="stretch", key=f"{key_prefix}_prob", config=chart_config)
 
 # ── Load data ─────────────────────────────────────────────────────────────────
 
