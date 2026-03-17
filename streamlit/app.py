@@ -131,7 +131,6 @@ if selected_sport_label == "All Sports":
 else:
     selected_sports = [k for k, v in SPORT_LABELS.items() if v == selected_sport_label]
 
-# Filter by sport first to build game list
 div_filtered = div_df[div_df["sport_key"].isin(selected_sports)].copy() if not div_df.empty else div_df
 sharp_filtered = sharp_df[sharp_df["sport_key"].isin(selected_sports)].copy() if not sharp_df.empty else sharp_df
 
@@ -165,7 +164,6 @@ with tab1:
     else:
         st.metric("Total Signals", len(div_filtered))
 
-        # Chart: divergence by game
         chart_data = (
             div_filtered.groupby(div_filtered.apply(game_label, axis=1))["divergence"]
             .mean()
@@ -179,7 +177,6 @@ with tab1:
 
         st.divider()
 
-        # Group by game
         games = div_filtered.apply(game_label, axis=1).unique()
         for game in sorted(games):
             game_data = div_filtered[div_filtered.apply(game_label, axis=1) == game].copy()
@@ -209,7 +206,6 @@ with tab2:
     else:
         st.metric("Total Signals", len(sharp_filtered))
 
-        # Chart: avg prob movement by game
         chart_data2 = (
             sharp_filtered.groupby(sharp_filtered.apply(game_label, axis=1))["prob_movement"]
             .mean()
@@ -223,7 +219,6 @@ with tab2:
 
         st.divider()
 
-        # Group by game
         games2 = sharp_filtered.apply(game_label, axis=1).unique()
         for game in sorted(games2):
             game_data = sharp_filtered[sharp_filtered.apply(game_label, axis=1) == game].copy()
@@ -246,18 +241,41 @@ with tab2:
 
 with tab3:
     st.subheader("Signals Summary")
-    st.caption("Aggregated signal counts by sport")
+    st.caption("Total signals by sport and game")
 
     if summary_df.empty:
         st.info("No summary data available.")
     else:
-        display_summary = summary_df.copy()
-        display_summary["sport_key"] = display_summary["sport_key"].apply(fmt_sport)
-        display_summary["latest_computed_at"] = display_summary["latest_computed_at"].apply(fmt_ts)
-        display_summary.columns = ["Sport", "Total Signals", "Latest Computed At"]
-        st.dataframe(display_summary, use_container_width=True, hide_index=True)
+        # Filter by selected sports
+        summary_filtered = summary_df[summary_df["sport_key"].isin(selected_sports)].copy()
 
-        st.bar_chart(display_summary.set_index("Sport")["Total Signals"], height=250)
+        # Sport-level rollup
+        sport_rollup = (
+            summary_filtered.groupby("sport_key")["signal_count"]
+            .sum()
+            .reset_index()
+        )
+        sport_rollup["sport_key"] = sport_rollup["sport_key"].apply(fmt_sport)
+        sport_rollup.columns = ["Sport", "Total Signals"]
+
+        st.bar_chart(sport_rollup.set_index("Sport")["Total Signals"], height=200)
+        st.caption("Total signals by sport")
+
+        st.divider()
+
+        # Group by sport, then show games within each sport
+        for sport_key in sorted(summary_filtered["sport_key"].unique()):
+            sport_data = summary_filtered[summary_filtered["sport_key"] == sport_key].copy()
+            sport_total = sport_data["signal_count"].sum()
+            st.markdown(f"#### {fmt_sport(sport_key)} — {sport_total} total signals")
+
+            display = sport_data[["away_team", "home_team", "signal_count", "latest_computed_at"]].copy()
+            display["game"] = display.apply(lambda r: f"{r['away_team']} @ {r['home_team']}", axis=1)
+            display["latest_computed_at"] = display["latest_computed_at"].apply(fmt_ts)
+            display = display[["game", "signal_count", "latest_computed_at"]]
+            display.columns = ["Game", "Signal Count", "Latest Computed At"]
+            display = display.sort_values("Signal Count", ascending=False)
+            st.dataframe(display, use_container_width=True, hide_index=True)
 
 # ── Auto-refresh ──────────────────────────────────────────────────────────────
 

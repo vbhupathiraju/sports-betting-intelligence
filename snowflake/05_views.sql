@@ -12,17 +12,20 @@ WHERE sport_key NOT IN ('basketball_wncaab', 'basketball_ncaaw')
   AND computed_at = (SELECT MAX(computed_at) FROM SPORTS_BETTING.PUBLIC.sharp_money_signals)
 ORDER BY prob_movement DESC;
 
--- v_signals_summary: aggregated signal counts by sport_key, NBA and NCAAB only
+-- v_signals_summary: signal counts by sport and game, NBA and NCAAB only
 CREATE OR REPLACE VIEW SPORTS_BETTING.PUBLIC.v_signals_summary AS
 SELECT 
     sport_key,
+    home_team,
+    away_team,
     COUNT(*) AS signal_count,
     MAX(computed_at) AS latest_computed_at
 FROM (
-    SELECT sport_key, computed_at FROM SPORTS_BETTING.PUBLIC.divergence_signals
+    SELECT sport_key, home_team, away_team, computed_at FROM SPORTS_BETTING.PUBLIC.divergence_signals
     WHERE sport_key NOT IN ('basketball_wncaab', 'basketball_ncaaw')
     UNION ALL
-    SELECT sport_key, computed_at FROM SPORTS_BETTING.PUBLIC.sharp_money_signals
+    SELECT sport_key, home_team, away_team, computed_at FROM SPORTS_BETTING.PUBLIC.sharp_money_signals
     WHERE sport_key NOT IN ('basketball_wncaab', 'basketball_ncaaw')
 )
-GROUP BY sport_key;
+GROUP BY sport_key, home_team, away_team
+ORDER BY sport_key, signal_count DESC;
