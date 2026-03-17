@@ -268,7 +268,7 @@ def render_odds_charts(home_team, away_team, key_prefix=""):
             marker=dict(size=6, color=color),
             hovertemplate=f"<b>{team} ({book})</b><br>Odds: %{{y}}<br>Time: %{{x}}<extra></extra>",
         ))
-    st.plotly_chart(fig_odds, use_container_width=True, key=f"{key_prefix}_odds")
+    st.plotly_chart(fig_odds, width="stretch", key=f"{key_prefix}_odds")
 
     # Implied probability chart
     fig_prob = go.Figure()
@@ -290,7 +290,7 @@ def render_odds_charts(home_team, away_team, key_prefix=""):
             marker=dict(size=6, color=color),
             hovertemplate=f"<b>{team} ({book})</b><br>Prob: %{{y:.1%}}<br>Time: %{{x}}<extra></extra>",
         ))
-    st.plotly_chart(fig_prob, use_container_width=True, key=f"{key_prefix}_prob")
+    st.plotly_chart(fig_prob, width="stretch", key=f"{key_prefix}_prob")
 
 # ── Load data ─────────────────────────────────────────────────────────────────
 
@@ -433,7 +433,7 @@ with tab1:
             y_title="Avg Divergence %",
             x_tickangle=-20,
         ))
-        st.plotly_chart(fig_summary, use_container_width=True, key="div_summary")
+        st.plotly_chart(fig_summary, width="stretch", key="div_summary")
         st.divider()
 
         games = div_filtered.apply(game_label, axis=1).unique()
@@ -490,7 +490,7 @@ with tab2:
             y_title="Avg Prob Movement %",
             x_tickangle=-20,
         ))
-        st.plotly_chart(fig_summary2, use_container_width=True, key="sharp_summary")
+        st.plotly_chart(fig_summary2, width="stretch", key="sharp_summary")
         st.divider()
 
         games2 = sharp_filtered.apply(game_label, axis=1).unique()
