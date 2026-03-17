@@ -20,6 +20,8 @@ services:
     restart: unless-stopped
     environment:
       - AWS_DEFAULT_REGION=us-east-1
+    depends_on:
+      - game-events-producer
     logging:
       driver: "json-file"
       options:
