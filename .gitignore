@@ -35,3 +35,6 @@ secrets.json
 
 # Deployment artifacts
 producers.tar.gz
+
+# Airflow
+airflow/logs/

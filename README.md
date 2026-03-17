@@ -7,7 +7,7 @@ A real-time data engineering project that streams live sports odds and predictio
 - **Transport:** Amazon Kinesis Data Firehose → S3
 - **Processing:** Databricks Structured Streaming + ML (Isolation Forest)
 - **Warehouse:** Snowflake
-- **Orchestration:** Apache Airflow (AWS MWAA)
+- **Orchestration:** Apache Airflow (self-hosted EC2)
 - **Security:** AWS Secrets Manager, CloudTrail, IAM, KMS
 - **Dashboard:** Streamlit (public)
 
