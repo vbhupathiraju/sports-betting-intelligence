@@ -1,14 +1,46 @@
 import streamlit as st
 import snowflake.connector
 import pandas as pd
+import plotly.graph_objects as go
 import requests
-from datetime import timezone
 
 st.set_page_config(
     page_title="Sports Betting Intelligence",
     page_icon="📊",
     layout="wide"
 )
+
+# ── Dark chart theme ──────────────────────────────────────────────────────────
+
+CHART_THEME = dict(
+    plot_bgcolor="#0d1117",
+    paper_bgcolor="#0d1117",
+    font=dict(color="#e6edf3", family="monospace"),
+    xaxis=dict(
+        gridcolor="#21262d",
+        linecolor="#30363d",
+        tickfont=dict(color="#8b949e"),
+        title_font=dict(color="#8b949e"),
+    ),
+    yaxis=dict(
+        gridcolor="#21262d",
+        linecolor="#30363d",
+        tickfont=dict(color="#8b949e"),
+        title_font=dict(color="#8b949e"),
+    ),
+    legend=dict(
+        bgcolor="#161b22",
+        bordercolor="#30363d",
+        borderwidth=1,
+        font=dict(color="#e6edf3"),
+    ),
+    margin=dict(l=50, r=20, t=30, b=40),
+)
+
+TEAM_COLORS = [
+    "#58a6ff", "#3fb950", "#f78166", "#d2a8ff",
+    "#ffa657", "#79c0ff", "#56d364", "#ff7b72",
+]
 
 # ── Snowflake connection ──────────────────────────────────────────────────────
 
@@ -166,51 +198,99 @@ def render_scoreboard(away_team, home_team, sport_key, scores_cache):
 
     if state == "in":
         period_str = period_label(sport_key, period)
-        status_display = f"🔴 LIVE — {period_str} {clock}".strip()
+        badge = f"🔴 LIVE — {period_str} {clock}".strip()
+        badge_color = "#f85149"
     elif state == "post":
-        status_display = f"✅ Final"
+        badge = "✅ Final"
+        badge_color = "#3fb950"
     else:
-        status_display = f"🕐 {status}"
+        badge = f"🕐 {status}"
+        badge_color = "#8b949e"
 
-    col1, col2, col3 = st.columns([2, 1, 2])
-    with col1:
-        st.metric(away_team, away_score)
-    with col2:
-        st.markdown(f"<div style='text-align:center;padding-top:20px;font-size:12px;color:gray'>{status_display}</div>", unsafe_allow_html=True)
-    with col3:
-        st.metric(home_team, home_score)
+    st.markdown(
+        f"""
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px 24px;margin-bottom:12px">
+          <div style="text-align:center;margin-bottom:12px">
+            <span style="background:#21262d;color:{badge_color};padding:4px 12px;border-radius:12px;font-size:12px;font-weight:600">{badge}</span>
+          </div>
+          <div style="display:flex;justify-content:space-around;align-items:center">
+            <div style="text-align:center">
+              <div style="font-size:13px;color:#8b949e;margin-bottom:4px">{away_team}</div>
+              <div style="font-size:36px;font-weight:700;color:#e6edf3;font-family:monospace">{away_score}</div>
+            </div>
+            <div style="color:#30363d;font-size:24px">—</div>
+            <div style="text-align:center">
+              <div style="font-size:13px;color:#8b949e;margin-bottom:4px">{home_team}</div>
+              <div style="font-size:36px;font-weight:700;color:#e6edf3;font-family:monospace">{home_score}</div>
+            </div>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 # ── Odds movement charts ──────────────────────────────────────────────────────
 
 def render_odds_charts(home_team, away_team):
     history = load_odds_history(home_team, away_team)
     if history.empty:
-        st.caption("No odds movement history available yet.")
+        st.caption("No odds movement history available yet — data accumulates as the pipeline runs.")
         return
 
     history["computed_at"] = pd.to_datetime(history["computed_at"], utc=True)
+    combos = history.groupby(["team", "bookmaker_key"])
 
-    # American odds chart
-    st.markdown("**American Odds Movement**")
-    odds_pivot = history.pivot_table(
-        index="computed_at",
-        columns=["team", "bookmaker_key"],
-        values="american_odds",
-        aggfunc="mean"
+    # ── American odds chart
+    fig_odds = go.Figure()
+    fig_odds.update_layout(
+        **CHART_THEME,
+        height=400,
+        title=dict(text="American Odds Movement", font=dict(color="#e6edf3", size=14), x=0),
+        yaxis=dict(**CHART_THEME["yaxis"], title="American Odds"),
+        xaxis=dict(**CHART_THEME["xaxis"], title="Time (UTC)"),
+        hovermode="x unified",
     )
-    odds_pivot.columns = [f"{t} ({b})" for t, b in odds_pivot.columns]
-    st.line_chart(odds_pivot, height=200)
 
-    # Implied probability chart
-    st.markdown("**Implied Probability Movement**")
-    prob_pivot = history.pivot_table(
-        index="computed_at",
-        columns=["team", "bookmaker_key"],
-        values="current_implied_prob",
-        aggfunc="mean"
+    for i, ((team, book), grp) in enumerate(combos):
+        grp = grp.sort_values("computed_at")
+        color = TEAM_COLORS[i % len(TEAM_COLORS)]
+        fig_odds.add_trace(go.Scatter(
+            x=grp["computed_at"],
+            y=grp["american_odds"],
+            mode="lines+markers",
+            name=f"{team} ({book})",
+            line=dict(color=color, width=2),
+            marker=dict(size=6, color=color),
+            hovertemplate=f"<b>{team} ({book})</b><br>Odds: %{{y}}<br>Time: %{{x}}<extra></extra>",
+        ))
+
+    st.plotly_chart(fig_odds, use_container_width=True)
+
+    # ── Implied probability chart
+    fig_prob = go.Figure()
+    fig_prob.update_layout(
+        **CHART_THEME,
+        height=400,
+        title=dict(text="Implied Probability Movement", font=dict(color="#e6edf3", size=14), x=0),
+        yaxis=dict(**CHART_THEME["yaxis"], title="Implied Probability", tickformat=".0%"),
+        xaxis=dict(**CHART_THEME["xaxis"], title="Time (UTC)"),
+        hovermode="x unified",
     )
-    prob_pivot.columns = [f"{t} ({b})" for t, b in prob_pivot.columns]
-    st.line_chart(prob_pivot, height=200)
+
+    for i, ((team, book), grp) in enumerate(combos):
+        grp = grp.sort_values("computed_at")
+        color = TEAM_COLORS[i % len(TEAM_COLORS)]
+        fig_prob.add_trace(go.Scatter(
+            x=grp["computed_at"],
+            y=grp["current_implied_prob"],
+            mode="lines+markers",
+            name=f"{team} ({book})",
+            line=dict(color=color, width=2),
+            marker=dict(size=6, color=color),
+            hovertemplate=f"<b>{team} ({book})</b><br>Prob: %{{y:.1%}}<br>Time: %{{x}}<extra></extra>",
+        ))
+
+    st.plotly_chart(fig_prob, use_container_width=True)
 
 # ── Load data ─────────────────────────────────────────────────────────────────
 
@@ -313,7 +393,7 @@ if selected_game != "All Games":
 
 st.divider()
 
-# ── Pre-load ESPN scores for all relevant sports ──────────────────────────────
+# ── Pre-load ESPN scores ──────────────────────────────────────────────────────
 
 espn_scores = {}
 for sport in selected_sports:
@@ -332,8 +412,6 @@ with tab1:
     if div_filtered.empty:
         st.info("No divergence signals for the selected filters.")
     else:
-        st.metric("Total Signals", len(div_filtered))
-
         chart_data = (
             div_filtered.groupby(div_filtered.apply(game_label, axis=1))["divergence"]
             .mean()
@@ -342,9 +420,21 @@ with tab1:
         chart_data.columns = ["game", "avg_divergence"]
         chart_data["avg_divergence_pct"] = (chart_data["avg_divergence"] * 100).round(1)
         chart_data = chart_data.sort_values("avg_divergence_pct", ascending=False)
-        st.bar_chart(chart_data.set_index("game")["avg_divergence_pct"], height=250)
-        st.caption("Average divergence % per game")
 
+        fig_summary = go.Figure(go.Bar(
+            x=chart_data["game"],
+            y=chart_data["avg_divergence_pct"],
+            marker_color="#58a6ff",
+            hovertemplate="%{x}<br>Avg Divergence: %{y:.1f}%<extra></extra>",
+        ))
+        fig_summary.update_layout(
+            **CHART_THEME,
+            height=300,
+            title=dict(text="Average Divergence % by Game", font=dict(color="#e6edf3", size=14), x=0),
+            xaxis=dict(**CHART_THEME["xaxis"], tickangle=-20),
+            yaxis=dict(**CHART_THEME["yaxis"], title="Avg Divergence %"),
+        )
+        st.plotly_chart(fig_summary, use_container_width=True)
         st.divider()
 
         games = div_filtered.apply(game_label, axis=1).unique()
@@ -358,19 +448,18 @@ with tab1:
             max_div = game_data["divergence"].max()
             with st.expander(f"**{game}** — {sport} · {n} signal(s) · max divergence {fmt_pct(max_div)}", expanded=False):
                 render_scoreboard(away, home, sport_key, espn_scores)
-                st.divider()
                 render_odds_charts(home, away)
-                st.divider()
-                display = game_data[[
-                    "market_ticker", "kalshi_implied_prob", "sportsbook_home_prob",
-                    "divergence", "signal_direction", "num_bookmakers", "commence_time"
-                ]].copy()
-                display["kalshi_implied_prob"] = display["kalshi_implied_prob"].apply(fmt_pct)
-                display["sportsbook_home_prob"] = display["sportsbook_home_prob"].apply(fmt_pct)
-                display["divergence"] = display["divergence"].apply(fmt_pct)
-                display["commence_time"] = display["commence_time"].apply(fmt_ts)
-                display.columns = ["Market Ticker", "Kalshi Prob", "Sportsbook Prob", "Divergence", "Direction", "# Bookmakers", "Game Time"]
-                st.dataframe(display, use_container_width=True, hide_index=True)
+                with st.expander("Show raw data", expanded=False):
+                    display = game_data[[
+                        "market_ticker", "kalshi_implied_prob", "sportsbook_home_prob",
+                        "divergence", "signal_direction", "num_bookmakers", "commence_time"
+                    ]].copy()
+                    display["kalshi_implied_prob"] = display["kalshi_implied_prob"].apply(fmt_pct)
+                    display["sportsbook_home_prob"] = display["sportsbook_home_prob"].apply(fmt_pct)
+                    display["divergence"] = display["divergence"].apply(fmt_pct)
+                    display["commence_time"] = display["commence_time"].apply(fmt_ts)
+                    display.columns = ["Market Ticker", "Kalshi Prob", "Sportsbook Prob", "Divergence", "Direction", "# Bookmakers", "Game Time"]
+                    st.dataframe(display, use_container_width=True, hide_index=True)
 
 # ── Tab 2: Sharp Money Signals ────────────────────────────────────────────────
 
@@ -381,8 +470,6 @@ with tab2:
     if sharp_filtered.empty:
         st.info("No sharp money signals for the selected filters.")
     else:
-        st.metric("Total Signals", len(sharp_filtered))
-
         chart_data2 = (
             sharp_filtered.groupby(sharp_filtered.apply(game_label, axis=1))["prob_movement"]
             .mean()
@@ -391,9 +478,21 @@ with tab2:
         chart_data2.columns = ["game", "avg_prob_movement"]
         chart_data2["avg_prob_movement_pct"] = (chart_data2["avg_prob_movement"] * 100).round(1)
         chart_data2 = chart_data2.sort_values("avg_prob_movement_pct", ascending=False)
-        st.bar_chart(chart_data2.set_index("game")["avg_prob_movement_pct"], height=250)
-        st.caption("Average probability movement % per game")
 
+        fig_summary2 = go.Figure(go.Bar(
+            x=chart_data2["game"],
+            y=chart_data2["avg_prob_movement_pct"],
+            marker_color="#3fb950",
+            hovertemplate="%{x}<br>Avg Prob Movement: %{y:.1f}%<extra></extra>",
+        ))
+        fig_summary2.update_layout(
+            **CHART_THEME,
+            height=300,
+            title=dict(text="Average Probability Movement % by Game", font=dict(color="#e6edf3", size=14), x=0),
+            xaxis=dict(**CHART_THEME["xaxis"], tickangle=-20),
+            yaxis=dict(**CHART_THEME["yaxis"], title="Avg Prob Movement %"),
+        )
+        st.plotly_chart(fig_summary2, use_container_width=True)
         st.divider()
 
         games2 = sharp_filtered.apply(game_label, axis=1).unique()
@@ -407,19 +506,18 @@ with tab2:
             max_move = game_data["prob_movement"].max()
             with st.expander(f"**{game}** — {sport} · {n} signal(s) · max prob movement {fmt_pct(max_move)}", expanded=False):
                 render_scoreboard(away, home, sport_key, espn_scores)
-                st.divider()
                 render_odds_charts(home, away)
-                st.divider()
-                display = game_data[[
-                    "team", "bookmaker_key", "prev_odds", "american_odds",
-                    "prob_movement", "movement_direction", "commence_time"
-                ]].copy()
-                display["prev_odds"] = display["prev_odds"].apply(fmt_odds)
-                display["american_odds"] = display["american_odds"].apply(fmt_odds)
-                display["prob_movement"] = display["prob_movement"].apply(fmt_pct)
-                display["commence_time"] = display["commence_time"].apply(fmt_ts)
-                display.columns = ["Team", "Bookmaker", "Prev Odds", "Current Odds", "Prob Movement", "Direction", "Game Time"]
-                st.dataframe(display, use_container_width=True, hide_index=True)
+                with st.expander("Show raw data", expanded=False):
+                    display = game_data[[
+                        "team", "bookmaker_key", "prev_odds", "american_odds",
+                        "prob_movement", "movement_direction", "commence_time"
+                    ]].copy()
+                    display["prev_odds"] = display["prev_odds"].apply(fmt_odds)
+                    display["american_odds"] = display["american_odds"].apply(fmt_odds)
+                    display["prob_movement"] = display["prob_movement"].apply(fmt_pct)
+                    display["commence_time"] = display["commence_time"].apply(fmt_ts)
+                    display.columns = ["Team", "Bookmaker", "Prev Odds", "Current Odds", "Prob Movement", "Direction", "Game Time"]
+                    st.dataframe(display, use_container_width=True, hide_index=True)
 
 # ── Auto-refresh ──────────────────────────────────────────────────────────────
 
