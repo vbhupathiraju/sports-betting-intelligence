@@ -73,8 +73,15 @@ def fmt_ts(val):
     except:
         return val
 
+def fmt_date(val):
+    try:
+        return pd.Timestamp(val).strftime("%b %d")
+    except:
+        return ""
+
 def game_label(row):
-    return f"{row['away_team']} @ {row['home_team']}"
+    date_str = fmt_date(row['commence_time'])
+    return f"{row['away_team']} @ {row['home_team']} ({date_str})"
 
 # ── Load data ─────────────────────────────────────────────────────────────────
 
@@ -119,9 +126,43 @@ st.divider()
 
 # ── Global filters ────────────────────────────────────────────────────────────
 
+# Date filter — default to today
+if not div_df.empty:
+    available_dates = sorted(
+        div_df["commence_time"].apply(lambda x: pd.Timestamp(x).date()).unique(),
+        reverse=True
+    )
+elif not sharp_df.empty:
+    available_dates = sorted(
+        sharp_df["commence_time"].apply(lambda x: pd.Timestamp(x).date()).unique(),
+        reverse=True
+    )
+else:
+    available_dates = []
+
+today = pd.Timestamp.utcnow().date()
+default_date = available_dates[0] if available_dates else today
+
+selected_date = st.selectbox(
+    "Filter by game date",
+    options=available_dates,
+    index=0,
+    format_func=lambda d: d.strftime("%B %d, %Y") + (" (today)" if d == today else "")
+)
+
+# Filter by date
+def filter_by_date(df, date):
+    if df.empty:
+        return df
+    return df[df["commence_time"].apply(lambda x: pd.Timestamp(x).date()) == date].copy()
+
+div_date_filtered = filter_by_date(div_df, selected_date)
+sharp_date_filtered = filter_by_date(sharp_df, selected_date)
+
+# Sport filter
 all_sports = sorted(set(
-    list(div_df["sport_key"].unique() if not div_df.empty else []) +
-    list(sharp_df["sport_key"].unique() if not sharp_df.empty else [])
+    list(div_date_filtered["sport_key"].unique() if not div_date_filtered.empty else []) +
+    list(sharp_date_filtered["sport_key"].unique() if not sharp_date_filtered.empty else [])
 ))
 sport_options = ["All Sports"] + [fmt_sport(s) for s in all_sports]
 selected_sport_label = st.selectbox("Filter by sport", sport_options)
@@ -131,9 +172,10 @@ if selected_sport_label == "All Sports":
 else:
     selected_sports = [k for k, v in SPORT_LABELS.items() if v == selected_sport_label]
 
-div_filtered = div_df[div_df["sport_key"].isin(selected_sports)].copy() if not div_df.empty else div_df
-sharp_filtered = sharp_df[sharp_df["sport_key"].isin(selected_sports)].copy() if not sharp_df.empty else sharp_df
+div_filtered = div_date_filtered[div_date_filtered["sport_key"].isin(selected_sports)].copy() if not div_date_filtered.empty else div_date_filtered
+sharp_filtered = sharp_date_filtered[sharp_date_filtered["sport_key"].isin(selected_sports)].copy() if not sharp_date_filtered.empty else sharp_date_filtered
 
+# Game filter
 all_games = sorted(set(
     list(div_filtered.apply(game_label, axis=1).unique() if not div_filtered.empty else []) +
     list(sharp_filtered.apply(game_label, axis=1).unique() if not sharp_filtered.empty else [])
@@ -246,10 +288,18 @@ with tab3:
     if summary_df.empty:
         st.info("No summary data available.")
     else:
-        # Filter by selected sports
         summary_filtered = summary_df[summary_df["sport_key"].isin(selected_sports)].copy()
+        summary_filtered["game_date"] = summary_filtered.apply(
+            lambda r: pd.Timestamp(r["latest_computed_at"]).date(), axis=1
+        )
+        summary_filtered = summary_filtered[
+            summary_filtered["home_team"].apply(
+                lambda ht: any(
+                    (div_date_filtered["home_team"] == ht).any() if not div_date_filtered.empty else False
+                )
+            )
+        ] if not div_date_filtered.empty else summary_filtered
 
-        # Sport-level rollup
         sport_rollup = (
             summary_filtered.groupby("sport_key")["signal_count"]
             .sum()
@@ -263,7 +313,6 @@ with tab3:
 
         st.divider()
 
-        # Group by sport, then show games within each sport
         for sport_key in sorted(summary_filtered["sport_key"].unique()):
             sport_data = summary_filtered[summary_filtered["sport_key"] == sport_key].copy()
             sport_total = sport_data["signal_count"].sum()
