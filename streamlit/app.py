@@ -447,7 +447,7 @@ with tab1:
             max_div = game_data["divergence"].max()
             with st.expander(f"**{game}** — {sport} · {n} signal(s) · max divergence {fmt_pct(max_div)}", expanded=False):
                 render_scoreboard(away, home, sport_key, espn_scores)
-                render_odds_charts(home, away, key_prefix=game.replace(" ", "_").replace("@", "at"))
+                render_odds_charts(home, away, key_prefix="div_" + game.replace(" ", "_").replace("@", "at").replace("(", "").replace(")", "").replace(",", ""))
                 with st.expander("Show raw data", expanded=False):
                     display = game_data[[
                         "market_ticker", "kalshi_implied_prob", "sportsbook_home_prob",
@@ -504,7 +504,7 @@ with tab2:
             max_move = game_data["prob_movement"].max()
             with st.expander(f"**{game}** — {sport} · {n} signal(s) · max prob movement {fmt_pct(max_move)}", expanded=False):
                 render_scoreboard(away, home, sport_key, espn_scores)
-                render_odds_charts(home, away, key_prefix=game.replace(" ", "_").replace("@", "at"))
+                render_odds_charts(home, away, key_prefix="sharp_" + game.replace(" ", "_").replace("@", "at").replace("(", "").replace(")", "").replace(",", ""))
                 with st.expander("Show raw data", expanded=False):
                     display = game_data[[
                         "team", "bookmaker_key", "prev_odds", "american_odds",
