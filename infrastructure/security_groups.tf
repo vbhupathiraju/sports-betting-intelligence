@@ -94,3 +94,14 @@ resource "aws_security_group" "msk" {
     Project = var.project_name
   }
 }
+
+# SMTP outbound for Airflow email alerts (added Phase 7)
+resource "aws_security_group_rule" "ec2_smtp_egress" {
+  type              = "egress"
+  from_port         = 587
+  to_port           = 587
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.ec2_producer.id
+  description       = "SMTP outbound for Airflow email alerts"
+}
