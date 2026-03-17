@@ -31,60 +31,73 @@ print(f"Catalog and schema ready: {CATALOG}.{SCHEMA}")
 # COMMAND ----------
 
 # Cell 3 — Auto Loader: raw odds → Bronze Delta table
-(spark.readStream
+# trigger(availableNow=True): process all pending files then stop (no infinite loop)
+# schemaEvolutionMode addNewColumns: accept new fields without crashing
+# awaitTermination: block until this stream finishes before moving to next cell
+print("Starting odds ingest...")
+odds_query = (spark.readStream
     .format("cloudFiles")
     .option("cloudFiles.format", "json")
     .option("cloudFiles.schemaLocation", f"{CHECKPOINT_BASE}/odds_schema")
     .option("cloudFiles.inferColumnTypes", "true")
+    .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
     .load(RAW_PATHS["odds"])
     .writeStream
     .format("delta")
     .option("checkpointLocation", f"{CHECKPOINT_BASE}/odds")
     .option("mergeSchema", "true")
+    .trigger(availableNow=True)
     .toTable(f"{CATALOG}.{SCHEMA}.raw_odds")
 )
-
-print("raw_odds stream started")
+odds_query.awaitTermination()
+print("raw_odds ingest complete")
 
 # COMMAND ----------
 
 # Cell 4 — Auto Loader: raw kalshi → Bronze Delta table
-(spark.readStream
+print("Starting kalshi ingest...")
+kalshi_query = (spark.readStream
     .format("cloudFiles")
     .option("cloudFiles.format", "json")
     .option("cloudFiles.schemaLocation", f"{CHECKPOINT_BASE}/kalshi_schema")
     .option("cloudFiles.inferColumnTypes", "true")
+    .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
     .load(RAW_PATHS["kalshi"])
     .writeStream
     .format("delta")
     .option("checkpointLocation", f"{CHECKPOINT_BASE}/kalshi")
     .option("mergeSchema", "true")
+    .trigger(availableNow=True)
     .toTable(f"{CATALOG}.{SCHEMA}.raw_kalshi")
 )
-
-print("raw_kalshi stream started")
+kalshi_query.awaitTermination()
+print("raw_kalshi ingest complete")
 
 # COMMAND ----------
 
 # Cell 5 — Auto Loader: raw game events → Bronze Delta table
-(spark.readStream
+print("Starting game_events ingest...")
+game_events_query = (spark.readStream
     .format("cloudFiles")
     .option("cloudFiles.format", "json")
     .option("cloudFiles.schemaLocation", f"{CHECKPOINT_BASE}/game_events_schema")
     .option("cloudFiles.inferColumnTypes", "true")
+    .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
     .load(RAW_PATHS["game_events"])
     .writeStream
     .format("delta")
     .option("checkpointLocation", f"{CHECKPOINT_BASE}/game_events")
     .option("mergeSchema", "true")
+    .trigger(availableNow=True)
     .toTable(f"{CATALOG}.{SCHEMA}.raw_game_events")
 )
-
-print("raw_game_events stream started")
+game_events_query.awaitTermination()
+print("raw_game_events ingest complete")
 
 # COMMAND ----------
 
 # Cell 6 — Verify Bronze tables have data
+# This now runs AFTER all three streams have fully completed
 for table in ["raw_odds", "raw_kalshi", "raw_game_events"]:
     count = spark.table(f"{CATALOG}.{SCHEMA}.{table}").count()
     print(f"{CATALOG}.{SCHEMA}.{table}: {count} rows")
@@ -98,5 +111,7 @@ spark.table(f"{CATALOG}.{SCHEMA}.raw_odds").printSchema()
 print("\n=== raw_kalshi schema ===")
 spark.table(f"{CATALOG}.{SCHEMA}.raw_kalshi").printSchema()
 
-# COMMAND ----------
+print("\n=== raw_game_events schema ===")
+spark.table(f"{CATALOG}.{SCHEMA}.raw_game_events").printSchema()
 
+# COMMAND ----------
