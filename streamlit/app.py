@@ -12,30 +12,43 @@ st.set_page_config(
 
 # ── Dark chart theme ──────────────────────────────────────────────────────────
 
-CHART_THEME = dict(
-    plot_bgcolor="#0d1117",
-    paper_bgcolor="#0d1117",
-    font=dict(color="#e6edf3", family="monospace"),
-    xaxis=dict(
-        gridcolor="#21262d",
-        linecolor="#30363d",
-        tickfont=dict(color="#8b949e"),
-        title_font=dict(color="#8b949e"),
-    ),
-    yaxis=dict(
-        gridcolor="#21262d",
-        linecolor="#30363d",
-        tickfont=dict(color="#8b949e"),
-        title_font=dict(color="#8b949e"),
-    ),
-    legend=dict(
-        bgcolor="#161b22",
-        bordercolor="#30363d",
-        borderwidth=1,
-        font=dict(color="#e6edf3"),
-    ),
-    margin=dict(l=50, r=20, t=30, b=40),
-)
+DARK_BG = "#0d1117"
+GRID_COLOR = "#21262d"
+BORDER_COLOR = "#30363d"
+TEXT_COLOR = "#e6edf3"
+MUTED_COLOR = "#8b949e"
+
+def dark_layout(title="", height=400, y_title="", x_tickangle=0, y_tickformat=""):
+    layout = dict(
+        plot_bgcolor=DARK_BG,
+        paper_bgcolor=DARK_BG,
+        font=dict(color=TEXT_COLOR, family="monospace"),
+        height=height,
+        margin=dict(l=50, r=20, t=40, b=60),
+        hovermode="x unified",
+        legend=dict(
+            bgcolor="#161b22",
+            bordercolor=BORDER_COLOR,
+            borderwidth=1,
+            font=dict(color=TEXT_COLOR),
+        ),
+        xaxis=dict(
+            gridcolor=GRID_COLOR,
+            linecolor=BORDER_COLOR,
+            tickfont=dict(color=MUTED_COLOR),
+            tickangle=x_tickangle,
+        ),
+        yaxis=dict(
+            gridcolor=GRID_COLOR,
+            linecolor=BORDER_COLOR,
+            tickfont=dict(color=MUTED_COLOR),
+            title=dict(text=y_title, font=dict(color=MUTED_COLOR)),
+            tickformat=y_tickformat,
+        ),
+    )
+    if title:
+        layout["title"] = dict(text=title, font=dict(color=TEXT_COLOR, size=14), x=0)
+    return layout
 
 TEAM_COLORS = [
     "#58a6ff", "#3fb950", "#f78166", "#d2a8ff",
@@ -171,13 +184,9 @@ def period_label(sport_key, period):
     if period == 0:
         return ""
     if sport_key == "basketball_nba":
-        if period <= 4:
-            return f"Q{period}"
-        return f"OT{period - 4}"
+        return f"Q{period}" if period <= 4 else f"OT{period - 4}"
     if sport_key == "basketball_ncaab":
-        if period <= 2:
-            return f"H{period}"
-        return f"OT{period - 2}"
+        return f"H{period}" if period <= 2 else f"OT{period - 2}"
     return f"P{period}"
 
 # ── Scoreboard widget ─────────────────────────────────────────────────────────
@@ -238,19 +247,15 @@ def render_odds_charts(home_team, away_team):
         return
 
     history["computed_at"] = pd.to_datetime(history["computed_at"], utc=True)
-    combos = history.groupby(["team", "bookmaker_key"])
+    combos = list(history.groupby(["team", "bookmaker_key"]))
 
-    # ── American odds chart
+    # American odds chart
     fig_odds = go.Figure()
-    fig_odds.update_layout(
-        **CHART_THEME,
+    fig_odds.update_layout(**dark_layout(
+        title="American Odds Movement",
         height=400,
-        title=dict(text="American Odds Movement", font=dict(color="#e6edf3", size=14), x=0),
-        yaxis=dict(**CHART_THEME["yaxis"], title="American Odds"),
-        xaxis=dict(**CHART_THEME["xaxis"], title="Time (UTC)"),
-        hovermode="x unified",
-    )
-
+        y_title="American Odds",
+    ))
     for i, ((team, book), grp) in enumerate(combos):
         grp = grp.sort_values("computed_at")
         color = TEAM_COLORS[i % len(TEAM_COLORS)]
@@ -263,20 +268,16 @@ def render_odds_charts(home_team, away_team):
             marker=dict(size=6, color=color),
             hovertemplate=f"<b>{team} ({book})</b><br>Odds: %{{y}}<br>Time: %{{x}}<extra></extra>",
         ))
-
     st.plotly_chart(fig_odds, use_container_width=True)
 
-    # ── Implied probability chart
+    # Implied probability chart
     fig_prob = go.Figure()
-    fig_prob.update_layout(
-        **CHART_THEME,
+    fig_prob.update_layout(**dark_layout(
+        title="Implied Probability Movement",
         height=400,
-        title=dict(text="Implied Probability Movement", font=dict(color="#e6edf3", size=14), x=0),
-        yaxis=dict(**CHART_THEME["yaxis"], title="Implied Probability", tickformat=".0%"),
-        xaxis=dict(**CHART_THEME["xaxis"], title="Time (UTC)"),
-        hovermode="x unified",
-    )
-
+        y_title="Implied Probability",
+        y_tickformat=".0%",
+    ))
     for i, ((team, book), grp) in enumerate(combos):
         grp = grp.sort_values("computed_at")
         color = TEAM_COLORS[i % len(TEAM_COLORS)]
@@ -289,7 +290,6 @@ def render_odds_charts(home_team, away_team):
             marker=dict(size=6, color=color),
             hovertemplate=f"<b>{team} ({book})</b><br>Prob: %{{y:.1%}}<br>Time: %{{x}}<extra></extra>",
         ))
-
     st.plotly_chart(fig_prob, use_container_width=True)
 
 # ── Load data ─────────────────────────────────────────────────────────────────
@@ -427,13 +427,12 @@ with tab1:
             marker_color="#58a6ff",
             hovertemplate="%{x}<br>Avg Divergence: %{y:.1f}%<extra></extra>",
         ))
-        fig_summary.update_layout(
-            **CHART_THEME,
+        fig_summary.update_layout(**dark_layout(
+            title="Average Divergence % by Game",
             height=300,
-            title=dict(text="Average Divergence % by Game", font=dict(color="#e6edf3", size=14), x=0),
-            xaxis=dict(**CHART_THEME["xaxis"], tickangle=-20),
-            yaxis=dict(**CHART_THEME["yaxis"], title="Avg Divergence %"),
-        )
+            y_title="Avg Divergence %",
+            x_tickangle=-20,
+        ))
         st.plotly_chart(fig_summary, use_container_width=True)
         st.divider()
 
@@ -485,13 +484,12 @@ with tab2:
             marker_color="#3fb950",
             hovertemplate="%{x}<br>Avg Prob Movement: %{y:.1f}%<extra></extra>",
         ))
-        fig_summary2.update_layout(
-            **CHART_THEME,
+        fig_summary2.update_layout(**dark_layout(
+            title="Average Probability Movement % by Game",
             height=300,
-            title=dict(text="Average Probability Movement % by Game", font=dict(color="#e6edf3", size=14), x=0),
-            xaxis=dict(**CHART_THEME["xaxis"], tickangle=-20),
-            yaxis=dict(**CHART_THEME["yaxis"], title="Avg Prob Movement %"),
-        )
+            y_title="Avg Prob Movement %",
+            x_tickangle=-20,
+        ))
         st.plotly_chart(fig_summary2, use_container_width=True)
         st.divider()
 
