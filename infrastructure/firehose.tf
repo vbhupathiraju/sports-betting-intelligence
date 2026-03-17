@@ -48,12 +48,12 @@ resource "aws_kinesis_firehose_delivery_stream" "odds_stream" {
   destination = "extended_s3"
 
   extended_s3_configuration {
-    role_arn           = aws_iam_role.firehose_role.arn
-    bucket_arn         = "arn:aws:s3:::sports-betting-raw-data-974482386805"
-    prefix             = "odds/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/"
+    role_arn            = aws_iam_role.firehose_role.arn
+    bucket_arn          = "arn:aws:s3:::sports-betting-raw-data-974482386805"
+    prefix              = "odds/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/"
     error_output_prefix = "odds-errors/!{firehose:error-output-type}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/"
-    buffering_size      = 5
-    buffering_interval  = 300
+    buffering_size      = 1
+    buffering_interval  = 60
     compression_format  = "UNCOMPRESSED"
   }
 }
@@ -67,12 +67,12 @@ resource "aws_kinesis_firehose_delivery_stream" "kalshi_stream" {
   destination = "extended_s3"
 
   extended_s3_configuration {
-    role_arn           = aws_iam_role.firehose_role.arn
-    bucket_arn         = "arn:aws:s3:::sports-betting-raw-data-974482386805"
-    prefix             = "kalshi/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/"
+    role_arn            = aws_iam_role.firehose_role.arn
+    bucket_arn          = "arn:aws:s3:::sports-betting-raw-data-974482386805"
+    prefix              = "kalshi/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/"
     error_output_prefix = "kalshi-errors/!{firehose:error-output-type}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/"
-    buffering_size      = 5
-    buffering_interval  = 300
+    buffering_size      = 1
+    buffering_interval  = 60
     compression_format  = "UNCOMPRESSED"
   }
 }
@@ -86,12 +86,12 @@ resource "aws_kinesis_firehose_delivery_stream" "game_events_stream" {
   destination = "extended_s3"
 
   extended_s3_configuration {
-    role_arn           = aws_iam_role.firehose_role.arn
-    bucket_arn         = "arn:aws:s3:::sports-betting-raw-data-974482386805"
-    prefix             = "game-events/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/"
+    role_arn            = aws_iam_role.firehose_role.arn
+    bucket_arn          = "arn:aws:s3:::sports-betting-raw-data-974482386805"
+    prefix              = "game-events/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/"
     error_output_prefix = "game-events-errors/!{firehose:error-output-type}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/"
-    buffering_size      = 5
-    buffering_interval  = 300
+    buffering_size      = 1
+    buffering_interval  = 60
     compression_format  = "UNCOMPRESSED"
   }
 }
