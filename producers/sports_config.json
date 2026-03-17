@@ -3,6 +3,8 @@
     "basketball_nba": {
       "active": true,
       "poll_interval_active_seconds": 15,
+      "odds_api_poll_interval_active_seconds": 120,
+      "odds_api_poll_interval_idle_seconds": 300,
       "poll_interval_idle_seconds": 300,
       "schedule": {
         "timezone": "America/Los_Angeles",
@@ -51,6 +53,8 @@
     "basketball_ncaab": {
       "active": true,
       "poll_interval_active_seconds": 15,
+      "odds_api_poll_interval_active_seconds": 120,
+      "odds_api_poll_interval_idle_seconds": 300,
       "poll_interval_idle_seconds": 300,
       "schedule": {
         "timezone": "America/Los_Angeles",

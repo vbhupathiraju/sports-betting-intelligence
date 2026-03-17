@@ -127,10 +127,16 @@ def main():
 
             producer.flush()
 
-            # Use the shortest active poll interval among in-window sports
-            sleep_secs = min(
-                get_poll_interval(config["sports"][s]) for s in in_window
-            )
+            # Use odds-specific poll interval (slower than ESPN/Kalshi intervals)
+            def odds_sleep(s):
+                sport_cfg = config["sports"][s]
+                if is_within_schedule(sport_cfg):
+                    return sport_cfg.get("odds_api_poll_interval_active_seconds",
+                                         get_poll_interval(sport_cfg))
+                return sport_cfg.get("odds_api_poll_interval_idle_seconds",
+                                      get_poll_interval(sport_cfg))
+
+            sleep_secs = min(odds_sleep(s) for s in in_window)
             logger.info(
                 "Flushed all messages. Sleeping %ds...", sleep_secs
             )
