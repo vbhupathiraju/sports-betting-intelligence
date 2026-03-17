@@ -240,7 +240,7 @@ def render_scoreboard(away_team, home_team, sport_key, scores_cache):
 
 # ── Odds movement charts ──────────────────────────────────────────────────────
 
-def render_odds_charts(home_team, away_team):
+def render_odds_charts(home_team, away_team, key_prefix=""):
     history = load_odds_history(home_team, away_team)
     if history.empty:
         st.caption("No odds movement history available yet — data accumulates as the pipeline runs.")
@@ -268,7 +268,7 @@ def render_odds_charts(home_team, away_team):
             marker=dict(size=6, color=color),
             hovertemplate=f"<b>{team} ({book})</b><br>Odds: %{{y}}<br>Time: %{{x}}<extra></extra>",
         ))
-    st.plotly_chart(fig_odds, use_container_width=True)
+    st.plotly_chart(fig_odds, use_container_width=True, key=f"{key_prefix}_odds")
 
     # Implied probability chart
     fig_prob = go.Figure()
@@ -290,7 +290,7 @@ def render_odds_charts(home_team, away_team):
             marker=dict(size=6, color=color),
             hovertemplate=f"<b>{team} ({book})</b><br>Prob: %{{y:.1%}}<br>Time: %{{x}}<extra></extra>",
         ))
-    st.plotly_chart(fig_prob, use_container_width=True)
+    st.plotly_chart(fig_prob, use_container_width=True, key=f"{key_prefix}_prob")
 
 # ── Load data ─────────────────────────────────────────────────────────────────
 
@@ -433,7 +433,7 @@ with tab1:
             y_title="Avg Divergence %",
             x_tickangle=-20,
         ))
-        st.plotly_chart(fig_summary, use_container_width=True)
+        st.plotly_chart(fig_summary, use_container_width=True, key="div_summary")
         st.divider()
 
         games = div_filtered.apply(game_label, axis=1).unique()
@@ -447,7 +447,7 @@ with tab1:
             max_div = game_data["divergence"].max()
             with st.expander(f"**{game}** — {sport} · {n} signal(s) · max divergence {fmt_pct(max_div)}", expanded=False):
                 render_scoreboard(away, home, sport_key, espn_scores)
-                render_odds_charts(home, away)
+                render_odds_charts(home, away, key_prefix=game.replace(" ", "_").replace("@", "at"))
                 with st.expander("Show raw data", expanded=False):
                     display = game_data[[
                         "market_ticker", "kalshi_implied_prob", "sportsbook_home_prob",
@@ -458,7 +458,7 @@ with tab1:
                     display["divergence"] = display["divergence"].apply(fmt_pct)
                     display["commence_time"] = display["commence_time"].apply(fmt_ts)
                     display.columns = ["Market Ticker", "Kalshi Prob", "Sportsbook Prob", "Divergence", "Direction", "# Bookmakers", "Game Time"]
-                    st.dataframe(display, use_container_width=True, hide_index=True)
+                    st.dataframe(display, width="stretch", hide_index=True)
 
 # ── Tab 2: Sharp Money Signals ────────────────────────────────────────────────
 
@@ -490,7 +490,7 @@ with tab2:
             y_title="Avg Prob Movement %",
             x_tickangle=-20,
         ))
-        st.plotly_chart(fig_summary2, use_container_width=True)
+        st.plotly_chart(fig_summary2, use_container_width=True, key="sharp_summary")
         st.divider()
 
         games2 = sharp_filtered.apply(game_label, axis=1).unique()
@@ -504,7 +504,7 @@ with tab2:
             max_move = game_data["prob_movement"].max()
             with st.expander(f"**{game}** — {sport} · {n} signal(s) · max prob movement {fmt_pct(max_move)}", expanded=False):
                 render_scoreboard(away, home, sport_key, espn_scores)
-                render_odds_charts(home, away)
+                render_odds_charts(home, away, key_prefix=game.replace(" ", "_").replace("@", "at"))
                 with st.expander("Show raw data", expanded=False):
                     display = game_data[[
                         "team", "bookmaker_key", "prev_odds", "american_odds",
@@ -515,7 +515,7 @@ with tab2:
                     display["prob_movement"] = display["prob_movement"].apply(fmt_pct)
                     display["commence_time"] = display["commence_time"].apply(fmt_ts)
                     display.columns = ["Team", "Bookmaker", "Prev Odds", "Current Odds", "Prob Movement", "Direction", "Game Time"]
-                    st.dataframe(display, use_container_width=True, hide_index=True)
+                    st.dataframe(display, width="stretch", hide_index=True)
 
 # ── Auto-refresh ──────────────────────────────────────────────────────────────
 
