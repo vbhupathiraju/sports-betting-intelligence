@@ -7,6 +7,23 @@ services:
     restart: unless-stopped
     environment:
       - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - ./producers/sports_config.json:/app/sports_config.json
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  game-events-producer:
+    build:
+      context: ./producers
+      dockerfile: game_events_producer/Dockerfile
+    restart: unless-stopped
+    environment:
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - ./producers/sports_config.json:/app/sports_config.json
     logging:
       driver: "json-file"
       options:
@@ -22,19 +39,8 @@ services:
       - AWS_DEFAULT_REGION=us-east-1
     depends_on:
       - game-events-producer
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  game-events-producer:
-    build:
-      context: ./producers
-      dockerfile: game_events_producer/Dockerfile
-    restart: unless-stopped
-    environment:
-      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - ./producers/sports_config.json:/app/sports_config.json
     logging:
       driver: "json-file"
       options:

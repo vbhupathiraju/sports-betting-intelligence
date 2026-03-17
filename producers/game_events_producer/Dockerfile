@@ -7,6 +7,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY secrets_helper.py .
 COPY msk_producer.py .
+COPY config_loader.py .
+COPY sports_config.json .
 COPY game_events_producer/main.py ./game_events_producer/main.py
 
 CMD ["python", "game_events_producer/main.py"]
