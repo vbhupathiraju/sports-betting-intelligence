@@ -51,7 +51,7 @@ export default function SharpMoneyTab({ date, sport }: { date: string; sport: st
     if (!gameMap[key]) gameMap[key] = [];
     gameMap[key].push(row);
   }
-  const games = Object.entries(gameMap).map(([key, rows]) => {
+  const games: { key: string; rows: any[]; score?: any; away: string; home: string }[] = Object.entries(gameMap).map(([key, rows]) => {
     const [away, home] = key.split('|');
     return { key, rows, score: scores[key], away, home };
   });
