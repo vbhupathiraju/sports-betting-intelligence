@@ -1,0 +1,157 @@
+'use client';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import ScoreBoard from './ScoreBoard';
+import OddsChart from './OddsChart';
+import DivergenceChart from './DivergenceChart';
+
+interface GameCardProps {
+  homeTeam: string;
+  awayTeam: string;
+  sportKey: string;
+  badge: string;
+  badgeColor: string;
+  subtitle: string;
+  score?: any;
+  mode: 'divergence' | 'sharp';
+}
+
+export default function GameCard({ homeTeam, awayTeam, sportKey, badge, badgeColor, subtitle, score, mode }: GameCardProps) {
+  const [open, setOpen] = useState(false);
+  const [oddsData, setOddsData] = useState<any[]>([]);
+  const [divData, setDivData] = useState<any[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [loadingCharts, setLoadingCharts] = useState(false);
+
+  const isLive = score?.state === 'in';
+  const isFinal = score?.state === 'post';
+
+  const handleOpen = async () => {
+    const next = !open;
+    setOpen(next);
+    if (next && !loaded) {
+      setLoadingCharts(true);
+      const [oddsRes, divRes] = await Promise.all([
+        fetch(`/api/odds/history?home_team=${encodeURIComponent(homeTeam)}&away_team=${encodeURIComponent(awayTeam)}`),
+        fetch(`/api/divergence/history?home_team=${encodeURIComponent(homeTeam)}&away_team=${encodeURIComponent(awayTeam)}`),
+      ]);
+      const [odds, div] = await Promise.all([oddsRes.json(), divRes.json()]);
+      setOddsData(Array.isArray(odds) ? odds : []);
+      setDivData(Array.isArray(div) ? div : []);
+      setLoaded(true);
+      setLoadingCharts(false);
+    }
+  };
+
+  const sportLabel = sportKey === 'basketball_nba' ? 'NBA' : 'NCAAB';
+  const borderColor = isLive ? 'var(--red)' : open ? 'var(--border-bright)' : 'var(--border)';
+  const badgeBg = badgeColor === 'var(--red)' ? 'var(--red-dim)' : badgeColor === 'var(--yellow)' ? 'var(--yellow-dim)' : badgeColor === 'var(--accent)' ? 'var(--accent-glow)' : 'var(--blue-dim)';
+
+  return (
+    <div style={{
+      background: open ? 'var(--bg-card)' : 'var(--bg-secondary)',
+      border: `1px solid ${borderColor}`,
+      borderRadius: 12,
+      overflow: 'hidden',
+      transition: 'all 0.2s',
+      boxShadow: isLive ? '0 0 20px rgba(255,71,87,0.1)' : open ? '0 4px 24px rgba(0,0,0,0.3)' : 'none',
+    }}>
+      {/* Card header */}
+      <button
+        onClick={handleOpen}
+        style={{
+          width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+          padding: '14px 20px', display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', gap: 12, textAlign: 'left',
+        }}
+      >
+        {/* Left side */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+          {isLive && (
+            <span style={{
+              background: 'var(--red)', color: '#fff',
+              fontSize: 9, fontWeight: 700, padding: '3px 7px', borderRadius: 4,
+              letterSpacing: '0.12em', flexShrink: 0, fontFamily: 'var(--font-mono)',
+              boxShadow: '0 0 10px rgba(255,71,87,0.5)',
+            }}>LIVE</span>
+          )}
+          {isFinal && (
+            <span style={{
+              background: 'transparent', color: 'var(--text-muted)',
+              border: '1px solid var(--border-bright)',
+              fontSize: 9, fontWeight: 500, padding: '3px 7px', borderRadius: 4,
+              letterSpacing: '0.1em', flexShrink: 0, fontFamily: 'var(--font-mono)',
+            }}>FINAL</span>
+          )}
+          <div style={{ minWidth: 0 }}>
+            <span style={{
+              color: 'var(--text-primary)', fontSize: 14, fontWeight: 500,
+              fontFamily: 'var(--font-display)', whiteSpace: 'nowrap',
+              overflow: 'hidden', textOverflow: 'ellipsis', display: 'block',
+            }}>
+              {awayTeam} <span style={{ color: 'var(--text-muted)', fontWeight: 300 }}>@</span> {homeTeam}
+            </span>
+          </div>
+          <span style={{
+            color: 'var(--text-muted)', fontSize: 10, flexShrink: 0,
+            background: 'var(--bg-primary)', border: '1px solid var(--border)',
+            borderRadius: 4, padding: '2px 7px', fontFamily: 'var(--font-mono)',
+            letterSpacing: '0.05em',
+          }}>{sportLabel}</span>
+        </div>
+
+        {/* Right side */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          <span style={{
+            fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 700,
+            color: badgeColor,
+            background: badgeBg,
+            border: `1px solid ${badgeColor}40`,
+            borderRadius: 6, padding: '4px 10px',
+          }}>{badge}</span>
+          <span style={{
+            color: 'var(--text-muted)', fontSize: 14,
+            transition: 'transform 0.2s',
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            display: 'inline-block', lineHeight: 1,
+          }}>▾</span>
+        </div>
+      </button>
+
+      {/* Expanded content */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div style={{ padding: '0 20px 20px', borderTop: '1px solid var(--border)' }}>
+              <div style={{ paddingTop: 16 }}>
+                <ScoreBoard score={score} sportKey={sportKey} />
+                {loadingCharts && (
+                  <div style={{ color: 'var(--text-muted)', fontSize: 12, padding: '24px 0', textAlign: 'center', fontFamily: 'var(--font-mono)' }}>
+                    Loading chart data...
+                  </div>
+                )}
+                {loaded && mode === 'divergence' && divData.length > 0 && (
+                  <DivergenceChart data={divData} />
+                )}
+                {loaded && oddsData.length > 0 && (
+                  <OddsChart data={oddsData} title="American Odds Movement" />
+                )}
+                {loaded && oddsData.length === 0 && divData.length === 0 && (
+                  <div style={{ color: 'var(--text-muted)', fontSize: 12, padding: '16px 0', textAlign: 'center', fontFamily: 'var(--font-mono)' }}>
+                    No chart history yet — data accumulates as the pipeline runs.
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

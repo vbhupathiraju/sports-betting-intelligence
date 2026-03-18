@@ -128,5 +128,3 @@ resource "aws_instance" "producer" {
     Project = var.project_name
   }
 }
-
-# Add EC2 instance ID to outputs

@@ -1,0 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #060a10;
+  --bg-secondary: #0b1118;
+  --bg-card: #0d1520;
+  --bg-hover: #111c2a;
+  --border: #1a2535;
+  --border-bright: #243548;
+  --accent: #00e5c4;
+  --accent-dim: #00b89d;
+  --accent-glow: rgba(0, 229, 196, 0.12);
+  --accent-glow-strong: rgba(0, 229, 196, 0.22);
+  --blue: #4dabf7;
+  --blue-dim: rgba(77,171,247,0.12);
+  --red: #ff4757;
+  --red-dim: rgba(255,71,87,0.12);
+  --green: #2ed573;
+  --green-dim: rgba(46,213,115,0.12);
+  --yellow: #ffd32a;
+  --yellow-dim: rgba(255,211,42,0.12);
+  --text-primary: #eaf2ff;
+  --text-secondary: #6e8caa;
+  --text-muted: #334a63;
+  --font-display: 'Outfit', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse 80% 40% at 10% -10%, rgba(0,229,196,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 90% 110%, rgba(77,171,247,0.04) 0%, transparent 60%);
+}
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
