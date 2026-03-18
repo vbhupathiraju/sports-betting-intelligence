@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import GameCard from './GameCard';
 import SummaryBars from './SummaryBars';
 import { DataContext } from './Dashboard';
-import { MARCH_MADNESS_2026 } from '@/lib/marchMadness2026';
 
 interface DivRow {
   home_team: string;
