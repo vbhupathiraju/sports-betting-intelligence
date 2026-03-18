@@ -98,6 +98,20 @@ def load_odds_history(home_team, away_team):
     df.columns = [c.lower() for c in df.columns]
     return df
 
+@st.cache_data(ttl=60)
+def load_divergence_history(home_team, away_team):
+    conn = get_snowflake_connection()
+    query = f"""
+        SELECT market_ticker, computed_at, kalshi_implied_prob, sportsbook_home_prob, divergence
+        FROM SPORTS_BETTING.PUBLIC.divergence_signals
+        WHERE home_team = '{home_team}' AND away_team = '{away_team}'
+        ORDER BY computed_at ASC
+    """
+    df = pd.read_sql(query, conn)
+    conn.close()
+    df.columns = [c.lower() for c in df.columns]
+    return df
+
 @st.cache_data(ttl=30)
 def load_espn_scores(sport_key):
     espn_paths = {
@@ -239,6 +253,80 @@ def render_scoreboard(away_team, home_team, sport_key, scores_cache):
     )
 
 # ── Odds movement charts ──────────────────────────────────────────────────────
+
+def render_divergence_chart(home_team, away_team, key_prefix=""):
+    history = load_divergence_history(home_team, away_team)
+    if history.empty:
+        return
+    history["computed_at"] = pd.to_datetime(history["computed_at"], utc=True)
+    history["computed_at_pst"] = history["computed_at"].dt.tz_convert("America/Los_Angeles")
+
+    chart_config = {"displayModeBar": False}
+    fig = go.Figure()
+    layout = dark_layout(title="Kalshi vs Sportsbook Implied Probability (PST)", height=350, y_title="Implied Prob", y_tickformat=".0%")
+    layout["xaxis"]["rangeslider"] = dict(visible=False)
+    layout["xaxis"]["title"] = ""
+    layout["margin"] = dict(l=50, r=150, t=50, b=40)
+    layout["legend"] = dict(
+        bgcolor="#161b22", bordercolor="#30363d", borderwidth=1,
+        font=dict(color="#e6edf3"),
+        itemclick="toggle", itemdoubleclick="toggleothers",
+        title=dict(text="click to toggle", font=dict(color="#8b949e", size=10)),
+        orientation="v", x=1.01, xanchor="left", y=1, yanchor="top",
+    )
+    fig.update_layout(**layout)
+
+    # One line per market_ticker for Kalshi prob
+    for i, (ticker, grp) in enumerate(history.groupby("market_ticker")):
+        grp = grp.sort_values("computed_at_pst")
+        short = ticker.split("-")[-1] if "-" in ticker else ticker
+        fig.add_trace(go.Scatter(
+            x=grp["computed_at_pst"],
+            y=grp["kalshi_implied_prob"],
+            mode="lines+markers",
+            name=f"Kalshi {short}",
+            line=dict(color=TEAM_COLORS[i % len(TEAM_COLORS)], width=2, dash="solid"),
+            marker=dict(size=5),
+            hovertemplate=f"<b>Kalshi {short}</b><br>Prob: %{{y:.1%}}<br>%{{x|%b %d %H:%M PST}}<extra></extra>",
+        ))
+
+    # Sportsbook avg (deduplicated per computed_at)
+    sb = history.drop_duplicates(subset=["computed_at_pst"]).sort_values("computed_at_pst")
+    fig.add_trace(go.Scatter(
+        x=sb["computed_at_pst"],
+        y=sb["sportsbook_home_prob"],
+        mode="lines+markers",
+        name="Sportsbook avg",
+        line=dict(color="#f78166", width=2, dash="dot"),
+        marker=dict(size=5),
+        hovertemplate="<b>Sportsbook avg</b><br>Prob: %{y:.1%}<br>%{x|%b %d %H:%M PST}<extra></extra>",
+    ))
+
+    # Divergence as filled area
+    fig.add_trace(go.Scatter(
+        x=sb["computed_at_pst"],
+        y=sb["divergence"],
+        mode="lines",
+        name="Divergence",
+        line=dict(color="#d2a8ff", width=1, dash="dash"),
+        fill="tozeroy",
+        fillcolor="rgba(210,168,255,0.08)",
+        hovertemplate="<b>Divergence</b><br>%{y:.1%}<br>%{x|%b %d %H:%M PST}<extra></extra>",
+        yaxis="y2",
+    ))
+    fig.update_layout(
+        yaxis2=dict(
+            overlaying="y",
+            side="right",
+            title="Divergence",
+            tickformat=".0%",
+            gridcolor="#21262d",
+            tickfont=dict(color="#8b949e"),
+            title_font=dict(color="#8b949e"),
+            showgrid=False,
+        )
+    )
+    st.plotly_chart(fig, width="stretch", key=f"{key_prefix}_div", config=chart_config)
 
 def render_odds_charts(home_team, away_team, key_prefix=""):
     history = load_odds_history(home_team, away_team)
@@ -473,6 +561,7 @@ with tab1:
             max_div = game_data["divergence"].max()
             with st.expander(f"**{game}** — {sport} · {n} signal(s) · max divergence {fmt_pct(max_div)}", expanded=False):
                 render_scoreboard(away, home, sport_key, espn_scores)
+                render_divergence_chart(home, away, key_prefix="div_" + game.replace(" ", "_").replace("@", "at").replace("(", "").replace(")", "").replace(",", ""))
                 render_odds_charts(home, away, key_prefix="div_" + game.replace(" ", "_").replace("@", "at").replace("(", "").replace(")", "").replace(",", ""))
                 with st.expander("Show raw data", expanded=False):
                     display = game_data[[
@@ -530,6 +619,7 @@ with tab2:
             max_move = game_data["prob_movement"].max()
             with st.expander(f"**{game}** — {sport} · {n} signal(s) · max prob movement {fmt_pct(max_move)}", expanded=False):
                 render_scoreboard(away, home, sport_key, espn_scores)
+                render_divergence_chart(home, away, key_prefix="sharp_" + game.replace(" ", "_").replace("@", "at").replace("(", "").replace(")", "").replace(",", ""))
                 render_odds_charts(home, away, key_prefix="sharp_" + game.replace(" ", "_").replace("@", "at").replace("(", "").replace(")", "").replace(",", ""))
                 with st.expander("Show raw data", expanded=False):
                     display = game_data[[
