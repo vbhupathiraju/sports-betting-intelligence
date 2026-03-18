@@ -1,9 +1,11 @@
 'use client';
 import { useContext, useMemo } from 'react';
+import { MARCH_MADNESS_2026 } from '@/lib/marchMadness2026';
 import { motion } from 'framer-motion';
 import GameCard from './GameCard';
 import SummaryBars from './SummaryBars';
 import { DataContext } from './Dashboard';
+import { isMarchMadnessGame } from '@/lib/marchMadness2026';
 
 interface DivRow {
   home_team: string;
@@ -29,7 +31,10 @@ export default function DivergenceTab({ date, sport }: { date: string; sport: st
 
   const filtered = useMemo(() => divergence.filter((r: DivRow) => {
     const rowDate = r.commence_time ? r.commence_time.slice(0, 10) : '';
-    return rowDate === date && (sport === 'all' || r.sport_key === sport);
+    const sportMatch = sport === 'all' || r.sport_key === sport;
+    const mmOnly = r.sport_key !== 'basketball_ncaab' ||
+      (MARCH_MADNESS_2026.has(r.home_team) && MARCH_MADNESS_2026.has(r.away_team));
+    return rowDate === date && sportMatch && mmOnly;
   }), [divergence, date, sport]);
 
   if (loading) return (

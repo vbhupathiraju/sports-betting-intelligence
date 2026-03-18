@@ -1,5 +1,6 @@
 'use client';
 import { useContext, useMemo } from 'react';
+import { MARCH_MADNESS_2026 } from '@/lib/marchMadness2026';
 import { motion } from 'framer-motion';
 import GameCard from './GameCard';
 import SummaryBars from './SummaryBars';
@@ -29,7 +30,10 @@ export default function SharpMoneyTab({ date, sport }: { date: string; sport: st
 
   const filtered = useMemo(() => sharp.filter((r: SharpRow) => {
     const rowDate = r.commence_time ? r.commence_time.slice(0, 10) : '';
-    return rowDate === date && (sport === 'all' || r.sport_key === sport);
+    const sportMatch = sport === 'all' || r.sport_key === sport;
+    const mmOnly = r.sport_key !== 'basketball_ncaab' ||
+      (MARCH_MADNESS_2026.has(r.home_team) && MARCH_MADNESS_2026.has(r.away_team));
+    return rowDate === date && sportMatch && mmOnly;
   }), [sharp, date, sport]);
 
   if (loading) return (
