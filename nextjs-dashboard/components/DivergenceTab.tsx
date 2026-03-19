@@ -72,7 +72,7 @@ export default function DivergenceTab({ date, sport }: { date: string; sport: st
           const badgeColor = div >= 10 ? 'var(--red)' : div >= 5 ? 'var(--yellow)' : 'var(--accent)';
           return (
             <motion.div key={g.key} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-              <GameCard homeTeam={g.home} awayTeam={g.away} sportKey={g.rows[0].sport_key}
+              <GameCard homeTeam={g.home} awayTeam={g.away} sportKey={g.rows[0].sport_key} commenceTime={g.rows[0].commence_time}
                 badge={`${div.toFixed(1)}% ${dir === 'KALSHI_ABOVE' ? '↑' : '↓'}`}
                 badgeColor={badgeColor} subtitle="" score={g.score} mode="divergence" />
             </motion.div>

@@ -15,9 +15,10 @@ interface GameCardProps {
   subtitle: string;
   score?: any;
   mode: 'divergence' | 'sharp';
+  commenceTime?: string;
 }
 
-export default function GameCard({ homeTeam, awayTeam, sportKey, badge, badgeColor, subtitle, score, mode }: GameCardProps) {
+export default function GameCard({ homeTeam, awayTeam, sportKey, badge, badgeColor, subtitle, score, mode, commenceTime }: GameCardProps) {
   const [open, setOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -138,7 +139,7 @@ export default function GameCard({ homeTeam, awayTeam, sportKey, badge, badgeCol
           >
             <div style={{ padding: '0 20px 20px', borderTop: '1px solid var(--border)' }}>
               <div style={{ paddingTop: 16 }}>
-                <ScoreBoard score={score} sportKey={sportKey} />
+                <ScoreBoard score={score} sportKey={sportKey} homeTeam={homeTeam} awayTeam={awayTeam} commenceTime={score?.commence_time ?? commenceTime} />
                 {loadingCharts && (
                   <div style={{ color: 'var(--text-muted)', fontSize: 12, padding: '24px 0', textAlign: 'center', fontFamily: 'var(--font-mono)' }}>
                     Loading chart data...

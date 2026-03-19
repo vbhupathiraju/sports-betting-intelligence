@@ -50,12 +50,21 @@ function TeamBlock({ name, score, state, isWinning }: { name: string; score: str
   );
 }
 
-export default function ScoreBoard({ score, sportKey }: { score?: ScoreData; sportKey: string }) {
-  if (!score) return (
-    <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px', marginBottom: 16 }}>
-      <span style={{ color: 'var(--text-muted)', fontSize: 12, fontFamily: 'var(--font-mono)' }}>📡 Score unavailable</span>
-    </div>
-  );
+export default function ScoreBoard({ score, sportKey, homeTeam, awayTeam, commenceTime }: { score?: ScoreData; sportKey: string; homeTeam?: string; awayTeam?: string; commenceTime?: string }) {
+  if (!score) {
+    const fallback: ScoreData = {
+      home_team: homeTeam ?? '',
+      away_team: awayTeam ?? '',
+      home_score: '0',
+      away_score: '0',
+      status: 'pre',
+      state: 'pre',
+      period: 0,
+      display_clock: '',
+      commence_time: commenceTime ?? '',
+    };
+    return <ScoreBoard score={fallback} sportKey={sportKey} homeTeam={homeTeam} awayTeam={awayTeam} commenceTime={commenceTime} />;
+  }
 
   const { home_team, away_team, home_score, away_score, state, period, display_clock, commence_time } = score;
 
