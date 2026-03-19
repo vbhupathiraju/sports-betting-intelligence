@@ -134,8 +134,6 @@ def drain_game_events(consumer, active_sports):
             sport = record.get("sport_key", "")
             if sport not in active_sports:
                 continue
-            if record.get("completed", False):
-                continue
             game_date = (record.get("commence_time") or "")[:10]
             dedup_key = (sport, record.get("home_team", ""), record.get("away_team", ""), game_date)
             games[dedup_key] = record

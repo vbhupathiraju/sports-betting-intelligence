@@ -8,7 +8,15 @@
       "poll_interval_idle_seconds": 300,
       "schedule": {
         "timezone": "America/Los_Angeles",
-        "days": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+        "days": [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday"
+        ],
         "start_time": "15:00",
         "end_time": "23:00"
       },
@@ -59,17 +67,41 @@
       "schedule": {
         "timezone": "America/Los_Angeles",
         "day_schedules": {
-          "tuesday":   {"start_time": "15:00", "end_time": "21:00"},
-          "wednesday": {"start_time": "15:00", "end_time": "21:00"},
-          "thursday":  {"start_time": "08:00", "end_time": "21:00"},
-          "friday":    {"start_time": "08:00", "end_time": "21:00"},
-          "saturday":  {"start_time": "15:00", "end_time": "21:00"},
-          "sunday":    {"start_time": "15:00", "end_time": "21:00"},
-          "monday":    {"start_time": "15:00", "end_time": "21:00"}
+          "tuesday": {
+            "start_time": "15:00",
+            "end_time": "21:00"
+          },
+          "wednesday": {
+            "start_time": "15:00",
+            "end_time": "21:00"
+          },
+          "thursday": {
+            "start_time": "08:00",
+            "end_time": "21:00"
+          },
+          "friday": {
+            "start_time": "08:00",
+            "end_time": "21:00"
+          },
+          "saturday": {
+            "start_time": "15:00",
+            "end_time": "21:00"
+          },
+          "sunday": {
+            "start_time": "15:00",
+            "end_time": "21:00"
+          },
+          "monday": {
+            "start_time": "15:00",
+            "end_time": "21:00"
+          }
         }
       },
       "espn_league_path": "basketball/mens-college-basketball/scoreboard",
-      "espn_params": {"groups": "50", "limit": "365"},
+      "espn_params": {
+        "groups": "50",
+        "limit": "365"
+      },
       "odds_api_key": "basketball_ncaab",
       "kalshi_prefix": "KXNCAAMBGAME",
       "team_abbr": {
@@ -80,8 +112,6 @@
         "Auburn Tigers": "AUB",
         "BYU Cougars": "BYU",
         "Bradley Braves": "BRAD",
-        "Cal Bears": "CAL",
-        "Cal State Fullerton Titans": "CSU",
         "California Baptist Lancers": "CBU",
         "Clemson Tigers": "CLEM",
         "Davidson Wildcats": "DAV",
@@ -105,10 +135,8 @@
         "Jacksonville State Gamecocks": "JOES",
         "Kansas Jayhawks": "KU",
         "Kennesaw State Owls": "KENN",
-        "Kentucky Wildcats": "KENT",
         "Lehigh Mountain Hawks": "LEH",
         "Liberty Flames": "LIB",
-        "Long Island University Sharks": "LIU",
         "Louisville Cardinals": "LOU",
         "McNeese Cowboys": "MCNS",
         "Miami (OH) RedHawks": "MOH",
@@ -166,7 +194,20 @@
         "Wisconsin Badgers": "WIS",
         "Wright State Raiders": "WRST",
         "Wyoming Cowboys": "WYO",
-        "Yale Bulldogs": "YALE"
+        "Yale Bulldogs": "YALE",
+        "Alabama A&M Bulldogs": "AAMU",
+        "Arizona State Sun Devils": "ASU",
+        "California Golden Bears": "CAL",
+        "CSU Fullerton Titans": "CSUF",
+        "CSU Northridge Matadors": "CSUN",
+        "Charlotte 49ers": "CLT",
+        "LIU Sharks": "LIU",
+        "Kent State Golden Flashes": "KENT",
+        "Massachusetts Minutemen": "MASS",
+        "Ohio Bobcats": "OHIO",
+        "Toledo Rockets": "TOL",
+        "UC Davis Aggies": "UCD",
+        "UC San Diego Tritons": "UCSD"
       }
     },
     "american_football_nfl": {
