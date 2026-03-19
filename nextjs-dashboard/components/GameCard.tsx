@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ScoreBoard from './ScoreBoard';
+import { abbr } from '@/lib/teamAbbr';
 import OddsChart from './OddsChart';
 import DivergenceChart from './DivergenceChart';
 
@@ -18,6 +19,13 @@ interface GameCardProps {
 
 export default function GameCard({ homeTeam, awayTeam, sportKey, badge, badgeColor, subtitle, score, mode }: GameCardProps) {
   const [open, setOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   const [oddsData, setOddsData] = useState<any[]>([]);
   const [divData, setDivData] = useState<any[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -89,7 +97,7 @@ export default function GameCard({ homeTeam, awayTeam, sportKey, badge, badgeCol
               fontFamily: 'var(--font-display)', whiteSpace: 'nowrap',
               overflow: 'hidden', textOverflow: 'ellipsis', display: 'block',
             }}>
-              {awayTeam} <span style={{ color: 'var(--text-muted)', fontWeight: 300 }}>@</span> {homeTeam}
+              {isMobile ? abbr(awayTeam) : awayTeam} <span style={{ color: 'var(--text-muted)', fontWeight: 300 }}>@</span> {isMobile ? abbr(homeTeam) : homeTeam}
             </span>
           </div>
           <span style={{

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import GameCard from './GameCard';
 import SummaryBars from './SummaryBars';
 import { DataContext } from './Dashboard';
+import { abbr } from '@/lib/teamAbbr';
 
 interface DivRow {
   home_team: string;
@@ -56,7 +57,7 @@ export default function DivergenceTab({ date, sport }: { date: string; sport: st
   });
 
   const summaryItems = games
-    .map(g => ({ label: `${g.away} @ ${g.home}`, value: Number(g.rows[0].divergence) * 100, color: 'var(--accent)' }))
+    .map(g => ({ label: `${g.away} @ ${g.home}`, shortLabel: `${abbr(g.away)} @ ${abbr(g.home)}`, value: Number(g.rows[0].divergence) * 100, color: 'var(--accent)' }))
     .sort((a, b) => b.value - a.value);
 
   return (

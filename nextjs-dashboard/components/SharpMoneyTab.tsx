@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import GameCard from './GameCard';
 import SummaryBars from './SummaryBars';
 import { DataContext } from './Dashboard';
+import { abbr } from '@/lib/teamAbbr';
 
 interface SharpRow {
   home_team: string;
@@ -59,7 +60,7 @@ export default function SharpMoneyTab({ date, sport }: { date: string; sport: st
     const totalMove = Number(g.rows[0].prob_movement) * 100;
     const maxJump = Math.max(...g.rows.map((r: SharpRow) => Number(r.prob_movement) * 100));
     return {
-      label: `${g.away} @ ${g.home}`,
+      label: `${g.away} @ ${g.home}`, shortLabel: `${abbr(g.away)} @ ${abbr(g.home)}`,
       value: totalMove,
       color: maxJump >= 10 ? 'var(--red)' : totalMove >= 5 ? 'var(--yellow)' : 'var(--blue)',
     };

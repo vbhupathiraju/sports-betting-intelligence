@@ -1,14 +1,23 @@
 'use client';
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
 
 interface SummaryItem {
   label: string;
+  shortLabel?: string;
   value: number;
   color: string;
 }
 
 export default function SummaryBars({ items, title }: { items: SummaryItem[]; title: string }) {
   const maxVal = Math.max(...items.map(d => d.value), 1);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   return (
     <motion.div
@@ -18,8 +27,10 @@ export default function SummaryBars({ items, title }: { items: SummaryItem[]; ti
         background: 'var(--bg-card)',
         border: '1px solid var(--border)',
         borderRadius: 10,
-        padding: '20px 28px',
-        display: 'table',
+        padding: '20px 20px',
+        width: '100%',
+        boxSizing: 'border-box',
+        overflow: 'hidden',
       }}
     >
       <div style={{ fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.12em', marginBottom: 16, fontFamily: 'var(--font-mono)' }}>
@@ -32,16 +43,23 @@ export default function SummaryBars({ items, title }: { items: SummaryItem[]; ti
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.04 }}
-            style={{ display: 'flex', alignItems: 'center', gap: 16, whiteSpace: 'nowrap' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 10 }}
           >
             <div style={{
-              fontSize: 12, color: 'var(--text-secondary)',
-              width: 320, flexShrink: 0,
-              fontFamily: 'var(--font-display)', fontWeight: 400,
+              fontSize: 12,
+              color: 'var(--text-secondary)',
+              width: '35%',
+              minWidth: 0,
+              flexShrink: 0,
+              fontFamily: 'var(--font-display)',
+              fontWeight: 400,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
             }}>
-              {d.label}
+              {isMobile && d.shortLabel ? d.shortLabel : d.label}
             </div>
-            <div style={{ width: 300, height: 5, background: 'var(--bg-secondary)', borderRadius: 3, flexShrink: 0, overflow: 'hidden' }}>
+            <div style={{ flex: 1, height: 5, background: 'var(--bg-secondary)', borderRadius: 3, overflow: 'hidden', minWidth: 0 }}>
               <motion.div
                 initial={{ width: '0%' }}
                 animate={{ width: `${(d.value / maxVal) * 100}%` }}
@@ -54,8 +72,12 @@ export default function SummaryBars({ items, title }: { items: SummaryItem[]; ti
               />
             </div>
             <div style={{
-              fontSize: 13, color: d.color, fontWeight: 700,
-              width: 52, textAlign: 'right', flexShrink: 0,
+              fontSize: 13,
+              color: d.color,
+              fontWeight: 700,
+              width: 52,
+              textAlign: 'right',
+              flexShrink: 0,
               fontFamily: 'var(--font-mono)',
             }}>
               {d.value.toFixed(1)}%
