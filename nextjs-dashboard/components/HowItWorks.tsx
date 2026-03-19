@@ -76,7 +76,7 @@ export default function HowItWorks() {
                 top: 0, left: 0, right: 0, bottom: 0,
                 margin: 'auto',
                 zIndex: 1001,
-                width: 'calc(100vw - 40px)', maxWidth: 860,
+                width: 'calc(100vw - 40px)', maxWidth: 1080,
                 alignSelf: 'center',
                 maxHeight: '90vh',
                 overflowY: 'auto',
@@ -136,7 +136,7 @@ export default function HowItWorks() {
                     borderRadius: 8, padding: '12px 14px',
                   }}>
                     <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent)', letterSpacing: '0.12em', marginBottom: 6 }}>HOW TO USE IT</div>
-                    <p style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
+                    <p style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
                       A large divergence — especially if Kalshi is higher on a team — can indicate smart money flowing into the prediction market ahead of sportsbooks adjusting their lines. Consider it a flag to dig deeper on that game.
                     </p>
                   </div>
@@ -166,7 +166,7 @@ export default function HowItWorks() {
                     borderRadius: 8, padding: '12px 14px',
                   }}>
                     <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--blue)', letterSpacing: '0.12em', marginBottom: 6 }}>HOW TO USE IT</div>
-                    <p style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
+                    <p style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
                       Line movement without public cause is one of the most reliable indicators of informed betting activity. Use these signals to identify which side the sharps are on before the line moves further.
                     </p>
                   </div>
@@ -174,8 +174,8 @@ export default function HowItWorks() {
               </div>
 
               {/* Footer */}
-              <div style={{ marginTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-                <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-muted)', fontStyle: 'italic', opacity: 0.8 }}>
+              <div style={{ marginTop: 24, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+                <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-secondary)', fontStyle: 'italic' }}>
                   *not financial advice
                 </span>
                 <button
