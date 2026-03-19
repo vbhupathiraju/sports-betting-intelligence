@@ -5,6 +5,7 @@ import * as Tabs from '@radix-ui/react-tabs';
 import DivergenceTab from './DivergenceTab';
 import SharpMoneyTab from './SharpMoneyTab';
 import Clock from './Clock';
+import HowItWorks from './HowItWorks';
 import { format, subDays } from 'date-fns';
 
 const SPORTS = [
@@ -150,6 +151,10 @@ export default function Dashboard() {
           </motion.header>
 
           <div style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 28px' }}>
+            {/* How it works button — right aligned below header */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+              <HowItWorks />
+            </div>
             {/* Filters */}
             <motion.div
               initial={{ opacity: 0, y: 8 }}

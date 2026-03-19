@@ -75,8 +75,9 @@ export default function HowItWorks() {
                 position: 'fixed',
                 top: '50%', left: '50%',
                 transform: 'translate(-50%, -50%)',
+                marginLeft: 0, marginTop: 0,
                 zIndex: 1001,
-                width: '90%', maxWidth: 720,
+                width: '94%', maxWidth: 860,
                 maxHeight: '90vh',
                 overflowY: 'auto',
                 background: 'var(--bg-card)',
@@ -174,7 +175,7 @@ export default function HowItWorks() {
 
               {/* Footer */}
               <div style={{ marginTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', opacity: 0.5 }}>
+                <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-muted)', fontStyle: 'italic', opacity: 0.8 }}>
                   *not financial advice
                 </span>
                 <button
