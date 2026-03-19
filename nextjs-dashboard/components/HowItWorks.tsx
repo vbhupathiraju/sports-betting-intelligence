@@ -73,11 +73,11 @@ export default function HowItWorks() {
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               style={{
                 position: 'fixed',
-                top: '50%', left: '50%',
-                transform: 'translate(-50%, -50%)',
-                marginLeft: 0, marginTop: 0,
+                top: 0, left: 0, right: 0, bottom: 0,
+                margin: 'auto',
                 zIndex: 1001,
-                width: '94%', maxWidth: 860,
+                width: 'calc(100vw - 40px)', maxWidth: 860,
+                alignSelf: 'center',
                 maxHeight: '90vh',
                 overflowY: 'auto',
                 background: 'var(--bg-card)',
