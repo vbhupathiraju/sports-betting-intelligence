@@ -38,3 +38,5 @@ producers.tar.gz
 
 # Airflow
 airflow/logs/
+.vercel
+.env*.local

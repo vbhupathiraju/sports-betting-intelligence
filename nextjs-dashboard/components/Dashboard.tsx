@@ -49,8 +49,8 @@ export default function Dashboard() {
     if (isRefresh) setRefreshing(true);
     try {
       const [divRes, sharpRes] = await Promise.all([
-        fetch(`/api/divergence`),
-        fetch(`/api/sharp`),
+        fetch(`/api/divergence?date=${DATE_OPTIONS[0].value}`),
+        fetch(`/api/sharp?date=${DATE_OPTIONS[0].value}`),
       ]);
       const [divRows, sharpRows] = await Promise.all([divRes.json(), sharpRes.json()]);
 

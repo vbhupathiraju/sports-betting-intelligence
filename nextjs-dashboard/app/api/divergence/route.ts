@@ -9,9 +9,9 @@ export async function GET(req: NextRequest) {
   let sql = 'SELECT * FROM SPORTS_BETTING.PUBLIC.v_divergence_latest WHERE 1=1';
   const binds: any[] = [];
 
-  if (date) { sql += ` AND DATE(commence_time) = '${date}'`; }
+  if (date) { sql += ` AND DATE(CONVERT_TIMEZONE('America/Los_Angeles', commence_time)) = '${date}'`; }
   if (sport && sport !== 'all') { sql += ` AND sport_key = '${sport}'`; }
-  sql += ' ORDER BY divergence DESC NULLS LAST';
+  sql += ' ORDER BY divergence DESC NULLS LAST LIMIT 10000';
 
   try {
     const rows = await querySnowflake(sql, binds);

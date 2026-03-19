@@ -7,12 +7,14 @@ export async function GET(req: NextRequest) {
   const sport = searchParams.get('sport');
 
   let sql = 'SELECT * FROM SPORTS_BETTING.PUBLIC.v_sharp_money_latest WHERE 1=1';
-  if (date) { sql += ` AND DATE(commence_time) = '${date}'`; }
+  if (date) { sql += ` AND DATE(CONVERT_TIMEZONE('America/Los_Angeles', commence_time)) = '${date}'`; }
   if (sport && sport !== 'all') { sql += ` AND sport_key = '${sport}'`; }
-  sql += ' ORDER BY prob_movement DESC NULLS LAST';
+  sql += ' ORDER BY prob_movement DESC NULLS LAST LIMIT 10000';
 
   try {
     const rows = await querySnowflake(sql);
+
+
     return NextResponse.json(rows);
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

@@ -29,11 +29,10 @@ export default function SharpMoneyTab({ date, sport }: { date: string; sport: st
   const { sharp, scores, loading, error } = useContext(DataContext);
 
   const filtered = useMemo(() => sharp.filter((r: SharpRow) => {
-    const rowDate = r.commence_time ? r.commence_time.slice(0, 10) : '';
     const sportMatch = sport === 'all' || r.sport_key === sport;
     const mmOnly = r.sport_key !== 'basketball_ncaab' ||
       (MARCH_MADNESS_2026.has(r.home_team) && MARCH_MADNESS_2026.has(r.away_team));
-    return rowDate === date && sportMatch && mmOnly;
+    return sportMatch && mmOnly;
   }), [sharp, date, sport]);
 
   if (loading) return (
