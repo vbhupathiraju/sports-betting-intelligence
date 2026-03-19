@@ -113,8 +113,9 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Center — syncing */}
-              <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+              {/* Center — syncing (desktop only) */}
+              <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'var(--syncing-display, flex)' }}
+                className="syncing-indicator">
                 {refreshing && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}

@@ -42,3 +42,9 @@ body {
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg-primary); }
 ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+
+@media (max-width: 639px) {
+  .syncing-indicator {
+    display: none !important;
+  }
+}
