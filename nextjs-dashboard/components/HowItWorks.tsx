@@ -67,9 +67,9 @@ export default function HowItWorks() {
 
             {/* Modal panel */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 16 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               style={{
                 position: 'fixed',
